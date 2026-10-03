@@ -217,7 +217,10 @@ def smoke(root: Path, image: str, network_pool: str | None = None):
             ):
                 manager.create(slug, request)
             manager.compose(slug, "run", "--rm", "--no-deps", "-T", "admin", "python", "-c", SEED)
-            assert manager.doctor(slug)["ok"]
+            initial = manager.doctor(slug)
+            assert initial["ok"], manager.redact(
+                slug, json.dumps([check for check in initial["checks"] if not check["ok"]])
+            )
             before[slug] = business_snapshot(backups, slug)
         ids_b = manager.compose(slugs[1], "ps", "-q")
         real_docker = release_module.run_docker

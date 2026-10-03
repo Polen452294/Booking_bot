@@ -1,6 +1,7 @@
 import json
 from datetime import UTC, datetime, timedelta
 from pathlib import Path, PurePosixPath
+from types import SimpleNamespace
 from unittest.mock import Mock
 
 import pytest
@@ -61,6 +62,34 @@ def test_manifest_and_no_secrets(backups):
         assert request().token not in (path / name).read_text(encoding="utf-8")
     assert backups.list("alice")[0]["integrity"] == "OK"
     assert not backups.status("alice")["warning"]
+
+
+@pytest.mark.parametrize("platform", ["posix", "nt"])
+def test_private_archive_reader_preserves_security_and_host_access(backups, monkeypatch, platform):
+    backup_id = backups.create("alice")
+    commands = []
+    monkeypatch.setattr(
+        module,
+        "os",
+        SimpleNamespace(
+            name=platform,
+            getuid=lambda: 1001,
+            getgid=lambda: 1002,
+            fsync=module.os.fsync,
+        ),
+    )
+    monkeypatch.setattr(module, "run_docker", lambda args, **kwargs: commands.append(args))
+    backups.verify("alice", backup_id)
+    command = commands[0]
+    assert command[command.index("--cap-drop") + 1] == "ALL"
+    assert command[command.index("--network") + 1] == "none"
+    assert "--read-only" in command
+    assert "no-new-privileges:true" in command
+    assert "readonly" in command[command.index("--mount") + 1]
+    if platform == "posix":
+        assert command[command.index("--user") + 1] == "1001:1002"
+    else:
+        assert "--user" not in command
 
 
 @pytest.mark.parametrize("name", FILES)

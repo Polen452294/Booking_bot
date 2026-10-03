@@ -278,6 +278,9 @@ class BackupManager:
                 "ALL",
                 "--security-opt",
                 "no-new-privileges:true",
+                # Private bind-mounted dumps belong to the host operator. Root with
+                # all capabilities dropped cannot read another UID's 0700/0600 files.
+                *(["--user", f"{os.getuid()}:{os.getgid()}"] if os.name != "nt" else []),
                 "--mount",
                 f"type=bind,src={path},dst=/backup,readonly",
                 "postgres:17-alpine",

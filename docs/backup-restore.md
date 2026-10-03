@@ -45,6 +45,9 @@ Windows: существующий механизм private ACL ограничи�
 Systemd service по умолчанию запускается root: установка и registry должны принадлежать
 этому же оператору; отдельный служебный аккаунт можно задать через systemd drop-in,
 передав ему владение каталогами и доступ к Docker (он эквивалентен root-доступу).
+Offline `pg_restore --list` validator на Linux запускается с UID/GID этого
+оператора, без capabilities/network и с read-only backup mount. Это позволяет
+проверять private archive без ослабления 0700/0600 permissions.
 
 ## Ручной backup, проверка и статус
 

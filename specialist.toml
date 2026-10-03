@@ -38,7 +38,7 @@ phone_placeholder = "Нажмите кнопку или введите номе�
 
 [[services]]
 key = "consultation"
-pricing_mode = "FIXED"
+pricing_mode = "fixed"
 name = "Консультация"
 description = "Обсуждение идеи, размера и размещения татуировки"
 duration_minutes = 60
@@ -49,7 +49,7 @@ requires_approval = false
 
 [[services]]
 key = "tattoo-session"
-pricing_mode = "FIXED"
+pricing_mode = "fixed"
 name = "Сеанс татуировки"
 description = "Сеанс татуировки продолжительностью три часа"
 duration_minutes = 180

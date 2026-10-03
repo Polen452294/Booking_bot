@@ -10,7 +10,8 @@ permissions:
 jobs:
   checks:
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    # All acceptance scenarios take more than 35 minutes on hosted runners.
+    timeout-minutes: 45
     services:
       postgres:
         image: postgres:17-alpine

@@ -1,0 +1,105 @@
+{
+  "status": "BLOCKED_NOT_RELEASED",
+  "target_version": "1.0.0",
+  "candidate_version": "1.0.0-rc.1",
+  "candidate_source_commit": "adba856ecaf58087ccdc499c7330809259882ed0",
+  "candidate_image": "booking-bot:phase9a-final-candidate",
+  "candidate_local_image_id": "sha256:c7bd2f4d9dc0049c760f913977ade9a26b0c2d901e6595cf0060007159fbfd06",
+  "published_stable_image": null,
+  "published_stable_digest": null,
+  "database_head": "c75a01d29f10",
+  "target_os": "Ubuntu Server 24.04 LTS x86_64",
+  "release_date": null,
+  "preparation_date": "2026-10-03",
+  "preparation_timezone": "Europe/Moscow",
+  "blockers": [
+    "B1 clean VPS acceptance",
+    "B2 live Telegram/DNS/HTTPS",
+    "B3 hosted CI and immutable RC publication/access",
+    "B4 off-host recovery"
+  ],
+  "checks": {
+    "ruff": "PASS",
+    "unit": {
+      "status": "PASS",
+      "passed": 412
+    },
+    "integration": {
+      "status": "PASS",
+      "passed": 124
+    },
+    "fresh_and_old_db_migration": "PASS",
+    "production_build": "PASS",
+    "compose": "PASS",
+    "actionlint": "PASS (shellcheck/pyflakes disabled)",
+    "candidate_high_critical_findings": 0,
+    "history_scan": "15 commits; 2 reviewed false positives; no actionable findings",
+    "tree_scan": "2 reviewed false positives; no actionable findings",
+    "published_stable_install": "NOT RUN",
+    "live_telegram": "NOT RUN",
+    "off_host_restore": "NOT RUN",
+    "rc_to_stable_update": "NOT RUN",
+    "production_check": "NOT RUN",
+    "backup_linux_permissions": "Reproduced Permission denied with UID0/caps0; PASS with operator UID/GID",
+    "backup_tooling": "Current CLI release hardened PostgreSQL package; no upstream mutable tag",
+    "candidate_runtime": {
+      "version": "1.0.0-rc.1",
+      "heads": [
+        "c75a01d29f10"
+      ],
+      "client_config_in_image": false,
+      "runtime_user": "10001:10001"
+    },
+    "hosted_ci": {
+      "source_commit": "adba856ecaf58087ccdc499c7330809259882ed0",
+      "status": "in_progress",
+      "url": "https://github.com/Polen452294/Booking_bot/actions/runs/37115193442"
+    }
+  },
+  "artifacts": {
+    "tmp/phase9a-final-unit.log": {
+      "sha256": "58b30ce0a09a0b9d4a1246b4b4ec9924111f437a1d7f1e156ce4fdd79a08271b",
+      "bytes": 535
+    },
+    "tmp/phase9a/integration.log": {
+      "sha256": "98d6ca6baf7ba7240fb9a37e7ed03b89299ef26bfe7d8502275afd05d8e3b90c",
+      "bytes": 210
+    },
+    "tmp/phase9a/fresh-migration.log": {
+      "sha256": "787e38927620e16a54f8dc8b5a923b85d2962a6c44ff1d64dec1227c1fcf0c5c",
+      "bytes": 1419
+    },
+    "tmp/phase9a-build.log": {
+      "sha256": "4ab94144e5b37644289b4c03dc7ccc9f73aed8fbf383fa250d4209ebac93fd94",
+      "bytes": 18895
+    },
+    "tmp/phase9a/trivy-candidate.json": {
+      "sha256": "252bf3ce86add4d74059e1c49bea7213b5907884b5c04de35608a986d1af8841",
+      "bytes": 146541
+    },
+    "tmp/phase9a/sbom-candidate.spdx.json": {
+      "sha256": "df5b5ca68287be323ee07a4562c88044acf139cf0719b285bfb49d3d6cf77ea6",
+      "bytes": 194985
+    },
+    "tmp/phase9a/backup-permissions.json": {
+      "sha256": "0a927c7bfec0534a65d9ecd06c409021e4cfc0835138636abe744e2635247a3e",
+      "bytes": 130
+    },
+    "tmp/phase9a/compose-validation.json": {
+      "sha256": "b8883edeec6d64b06f4ec6a4b989bcbd3b27b36bb1cbb520a5af7ba1f05a37d7",
+      "bytes": 920
+    },
+    "tmp/phase9a-current-build.log": {
+      "sha256": "b2e9d47e4f1139e252a347a2c5459119b16f7cc1135d092821dfb08de6476a10",
+      "bytes": 18905
+    },
+    "tmp/phase9a/trivy-current.json": {
+      "sha256": "e7eeea94d24d5b5e0bca9c6b01b190470aae9719bd7e8090b2d71f94ceb28f39",
+      "bytes": 146565
+    },
+    "tmp/phase9a/sbom-current.spdx.json": {
+      "sha256": "ce0c2b431761a0c797ebce7f8139d87d11b9034e9a895078cb8fed2842222975",
+      "bytes": 195017
+    }
+  }
+}

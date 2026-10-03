@@ -12,6 +12,7 @@ from aiogram.types import BufferedInputFile, CallbackQuery, Message
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from booking_bot.bot.conversation_ui import edit_or_answer
 from booking_bot.bot.keyboards import (
     dates_keyboard,
     main_menu_keyboard,
@@ -49,6 +50,7 @@ from booking_bot.db.models import (
     TelegramUser,
 )
 from booking_bot.domain.enums import AppointmentStatus
+from booking_bot.domain.money import format_money
 from booking_bot.services.analytics import (
     MasterAnalytics,
     MasterAnalyticsService,
@@ -67,6 +69,7 @@ from booking_bot.services.bookings import (
 from booking_bot.services.bookings import (
     AppointmentNotFoundError as ClientAppointmentNotFoundError,
 )
+from booking_bot.services.conversations import ConversationService
 from booking_bot.services.master_access import get_master_for_user
 from booking_bot.services.master_schedule import (
     AppointmentNotFoundError,
@@ -162,8 +165,7 @@ async def _master_timezone(
 
 
 async def _edit(callback: CallbackQuery, text: str, **kwargs) -> None:
-    if isinstance(callback.message, Message):
-        await callback.message.edit_text(text, **kwargs)
+    await edit_or_answer(callback, text, **kwargs)
 
 
 def _format_appointment(item: MasterAppointment) -> str:
@@ -233,23 +235,13 @@ def _format_month_appointments_table(
 def _format_price(service: Service) -> str:
     if service.price_minor is None:
         return "не указана"
-    whole, cents = divmod(service.price_minor, 100)
-    amount = f"{whole:,}".replace(",", " ")
-    if cents:
-        amount = f"{amount},{cents:02d}"
-    symbols = {"RUB": "₽", "USD": "$", "EUR": "€"}
-    return f"{amount} {symbols.get(service.currency, service.currency)}"
+    return format_money(service.price_minor, service.currency)
 
 
 def _format_money_minor(value: int | None, currency: str) -> str:
     if value is None:
         return "нет данных"
-    whole, cents = divmod(value, 100)
-    amount = f"{whole:,}".replace(",", " ")
-    if cents:
-        amount = f"{amount},{cents:02d}"
-    symbols = {"RUB": "₽", "USD": "$", "EUR": "€"}
-    return f"{amount} {symbols.get(currency, currency)}"
+    return format_money(value, currency)
 
 
 def _format_analytics(report: MasterAnalytics) -> str:
@@ -419,10 +411,7 @@ async def _show_master_reschedule_dates(
         return
     timezone = await _master_timezone(session, business_id, master)
     today = datetime.now(UTC).astimezone(timezone).date()
-    dates = [
-        today + timedelta(days=offset)
-        for offset in range(get_settings().booking_dates_shown)
-    ]
+    dates = [today + timedelta(days=offset) for offset in range(get_settings().booking_dates_shown)]
     await state.set_state(MasterStates.rescheduling_date)
     await _edit(
         callback,
@@ -485,7 +474,13 @@ async def master_cabinet_command(
     await state.clear()
     await message.answer(
         f"Мой кабинет — <b>{escape(master.display_name)}</b>:",
-        reply_markup=master_menu_keyboard(),
+        reply_markup=master_menu_keyboard(
+            unread_count=await ConversationService().total_unread(
+                db_session,
+                business_id=business_id,
+                actor_user_id=_user.id,
+            )
+        ),
     )
 
 
@@ -506,7 +501,13 @@ async def master_menu(
     await _edit(
         callback,
         f"Мой кабинет — <b>{escape(master.display_name)}</b>:",
-        reply_markup=master_menu_keyboard(),
+        reply_markup=master_menu_keyboard(
+            unread_count=await ConversationService().total_unread(
+                db_session,
+                business_id=business_id,
+                actor_user_id=_user.id,
+            )
+        ),
     )
     await callback.answer()
 
@@ -1514,13 +1515,8 @@ async def master_schedule_selected_date(
         start_date=selected_date,
         days=1,
     )
-    text = (
-        f"<b>Расписание на {selected_date:%d.%m.%Y}</b>\n\n"
-        + (
-            "Выберите запись для просмотра."
-            if appointments
-            else "Записей нет."
-        )
+    text = f"<b>Расписание на {selected_date:%d.%m.%Y}</b>\n\n" + (
+        "Выберите запись для просмотра." if appointments else "Записей нет."
     )
     await _edit(
         callback,
@@ -1946,8 +1942,7 @@ async def master_confirm_reschedule(
     await state.clear()
     await _edit(
         callback,
-        "Запись перенесена. Клиент получит уведомление.\n\n"
-        + _format_appointment(appointment),
+        "Запись перенесена. Клиент получит уведомление.\n\n" + _format_appointment(appointment),
         reply_markup=master_appointment_actions_keyboard(appointment),
     )
     await callback.answer("Новое время сохранено")

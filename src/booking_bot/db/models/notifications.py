@@ -45,6 +45,10 @@ class NotificationJob(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     appointment_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("appointments.id", ondelete="CASCADE"), index=True
     )
+    booking_request_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("booking_requests.id", ondelete="CASCADE"), index=True
+    )
+    event_key: Mapped[str | None] = mapped_column(String(160), unique=True)
     recipient_user_id: Mapped[UUID] = mapped_column(
         ForeignKey("telegram_users.id", ondelete="CASCADE"), nullable=False, index=True
     )
@@ -55,6 +59,7 @@ class NotificationJob(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     state: Mapped[str] = mapped_column(
         String(24), nullable=False, default=NotificationJobState.PENDING.value, index=True
     )
+    claim_token: Mapped[UUID | None]
     attempt_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     last_error: Mapped[str | None] = mapped_column(Text)
     payload: Mapped[dict[str, Any] | None] = mapped_column(JSON)

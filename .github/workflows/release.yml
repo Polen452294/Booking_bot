@@ -1,0 +1,150 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: booking-bot-release
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+  publish:
+    needs: ci
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: write
+      packages: write
+    env:
+      IMAGE: ghcr.io/polen452294/booking-bot
+      SOCKET_IMAGE: ghcr.io/polen452294/booking-socket-proxy
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Verify tag and release notes
+        id: meta
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+          PYTHONPATH: src
+        run: python scripts/release_metadata.py --tag "$RELEASE_TAG" --notes "$RUNNER_TEMP/notes.md"
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Refuse to overwrite an existing full release tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PYTHONPATH: src
+        run: python scripts/verify_release_image.py
+      - uses: docker/setup-buildx-action@v4
+      - name: Build the image to be scanned and published
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          tags: ${{ env.IMAGE }}:${{ steps.meta.outputs.version }}
+          build-args: |
+            APP_VERSION=${{ steps.meta.outputs.version }}
+            VCS_REF=${{ github.sha }}
+      - name: Build versioned hardened socket proxy
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: >-
+          docker build --build-arg APP_VERSION="$VERSION"
+          --build-arg VCS_REF=${{ github.sha }}
+          -t "$SOCKET_IMAGE:$VERSION" infra/socket-proxy
+      - name: Scan with official free Trivy image (HIGH/CRITICAL fail)
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          docker save "$IMAGE:$VERSION" -o "$RUNNER_TEMP/release.tar"
+          docker run --rm -v "$RUNNER_TEMP:/scan" aquasec/trivy:0.74.0 image \
+            --input /scan/release.tar --scanners vuln --severity HIGH,CRITICAL \
+            --exit-code 1 --format json --output /scan/trivy.json
+          docker save "$SOCKET_IMAGE:$VERSION" -o "$RUNNER_TEMP/socket-proxy.tar"
+          docker run --rm -v "$RUNNER_TEMP:/scan" aquasec/trivy:0.74.0 image \
+            --input /scan/socket-proxy.tar --scanners vuln --severity HIGH,CRITICAL \
+            --exit-code 1 --format json --output /scan/trivy-socket.json
+      - name: Gate the infrastructure images used by new deployments
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          for SERVICE in postgres redis; do
+            docker build --build-arg APP_VERSION="$VERSION" --build-arg VCS_REF=${{ github.sha }} \
+              -t "ghcr.io/polen452294/booking-$SERVICE:$VERSION" "infra/$SERVICE"
+          done
+          docker pull traefik:v3.7.13
+          for IMAGE_REF in traefik:v3.7.13 "ghcr.io/polen452294/booking-postgres:$VERSION" "ghcr.io/polen452294/booking-redis:$VERSION"; do
+            IMAGE_NAME="${IMAGE_REF%%:*}"
+            IMAGE_NAME="${IMAGE_NAME##*/}"
+            docker save "$IMAGE_REF" -o "$RUNNER_TEMP/infrastructure.tar"
+            docker run --rm -v "$RUNNER_TEMP:/scan" aquasec/trivy:0.74.0 image \
+              --input /scan/infrastructure.tar --scanners vuln --severity HIGH,CRITICAL \
+              --exit-code 1 --format json --output "/scan/trivy-$IMAGE_NAME.json"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-release
+          path: |
+            ${{ runner.temp }}/trivy*.json
+          if-no-files-found: ignore
+      - name: Generate optional SPDX SBOM for the scanned application image
+        continue-on-error: true
+        run: >-
+          docker run --rm -v "$RUNNER_TEMP:/scan" aquasec/trivy:0.74.0 image
+          --input /scan/release.tar --scanners vuln --format spdx-json
+          --output /scan/sbom.spdx.json
+      - name: Publish exact scanned image; stable releases also update minor alias
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+          MINOR: ${{ steps.meta.outputs.minor }}
+          PRERELEASE: ${{ steps.meta.outputs.prerelease }}
+        run: |
+          docker push "$IMAGE:$VERSION"
+          if [ "$PRERELEASE" = false ]; then
+            docker tag "$IMAGE:$VERSION" "$IMAGE:$MINOR"
+            docker push "$IMAGE:$MINOR"
+          fi
+          docker push "$SOCKET_IMAGE:$VERSION"
+          docker push "ghcr.io/polen452294/booking-postgres:$VERSION"
+          docker push "ghcr.io/polen452294/booking-redis:$VERSION"
+      - name: Verify published digests against scanned image IDs and record provenance
+        env:
+          PYTHONPATH: src
+          RELEASE_COMMIT: ${{ github.sha }}
+        run: |
+          python -m pip install --require-hashes -r requirements.lock
+          python scripts/release_manifest.py --commit "$RELEASE_COMMIT" \
+            --output "$RUNNER_TEMP/release-manifest.json" --notes "$RUNNER_TEMP/notes.md"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-provenance
+          path: |
+            ${{ runner.temp }}/release-manifest.json
+            ${{ runner.temp }}/sbom.spdx.json
+          if-no-files-found: error
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          PRERELEASE: ${{ steps.meta.outputs.prerelease }}
+        run: |
+          if [ "$PRERELEASE" = true ]; then
+            gh release create "$RELEASE_TAG" "$RUNNER_TEMP/release-manifest.json" --verify-tag --prerelease --latest=false --title "$RELEASE_TAG" --notes-file "$RUNNER_TEMP/notes.md"
+          else
+            gh release create "$RELEASE_TAG" "$RUNNER_TEMP/release-manifest.json" --verify-tag --title "$RELEASE_TAG" --notes-file "$RUNNER_TEMP/notes.md"
+          fi
+          if [ -s "$RUNNER_TEMP/sbom.spdx.json" ]; then
+            gh release upload "$RELEASE_TAG" "$RUNNER_TEMP/sbom.spdx.json"
+          fi

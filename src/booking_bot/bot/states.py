@@ -3,6 +3,7 @@ from aiogram.fsm.state import State, StatesGroup
 
 class BookingStates(StatesGroup):
     selecting_service = State()
+    choosing_pricing_flow = State()
     selecting_date = State()
     selecting_slot = State()
     waiting_phone = State()
@@ -10,6 +11,15 @@ class BookingStates(StatesGroup):
     rescheduling_date = State()
     rescheduling_slot = State()
     rescheduling_confirming = State()
+
+
+class RequestStates(StatesGroup):
+    collecting = State()
+    phone = State()
+    reply = State()
+    price = State()
+    comment = State()
+    proposal_confirm = State()
 
 
 class MasterStates(StatesGroup):

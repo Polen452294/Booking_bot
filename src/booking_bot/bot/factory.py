@@ -10,7 +10,7 @@ def create_telegram_bot(token: str, settings: Settings) -> Bot:
     proxy_url = (
         settings.telegram_proxy_url.get_secret_value() if settings.telegram_proxy_url else None
     )
-    session = AiohttpSession(proxy=proxy_url)
+    session = AiohttpSession(proxy=proxy_url, timeout=20)
     return Bot(
         token=token,
         session=session,

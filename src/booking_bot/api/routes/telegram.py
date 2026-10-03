@@ -2,6 +2,8 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import ValidationError
+from redis.exceptions import RedisError
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from booking_bot.config import Settings, get_settings
@@ -11,6 +13,7 @@ from booking_bot.services.telegram_webhook import (
     TelegramBotNotConfiguredError,
     TelegramWebhookService,
 )
+from booking_bot.services.update_idempotency import UpdateInProgressError
 
 router = APIRouter()
 
@@ -32,6 +35,12 @@ async def receive_update(
             payload=payload,
             session=session,
         )
+    except (RedisError, SQLAlchemyError, UpdateInProgressError, TimeoutError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Telegram update temporarily unavailable",
+            headers={"Retry-After": "2"},
+        ) from exc
     except InvalidWebhookSecretError as exc:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

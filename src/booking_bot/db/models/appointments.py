@@ -117,6 +117,9 @@ class Appointment(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     service_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("services.id", ondelete="SET NULL"), index=True
     )
+    booking_request_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("booking_requests.id", ondelete="RESTRICT"), unique=True
+    )
     client_id: Mapped[UUID] = mapped_column(
         ForeignKey("telegram_users.id", ondelete="RESTRICT"), nullable=False, index=True
     )

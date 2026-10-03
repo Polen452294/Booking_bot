@@ -1,0 +1,96 @@
+name: CI
+on:
+  push:
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: booking
+          POSTGRES_PASSWORD: booking
+          POSTGRES_DB: booking
+        ports: ['55432:5432']
+        options: >-
+          --health-cmd "pg_isready -U booking -d booking"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+      redis:
+        image: redis:7.4-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s
+          --health-timeout 3s --health-retries 20
+    env:
+      DATABASE_URL: postgresql+asyncpg://booking:booking@127.0.0.1:55432/booking
+      REDIS_URL: redis://127.0.0.1:6379/0
+      # Disposable test credentials only; production credentials are never requested.
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: 'requirements*.lock'
+      - name: Install locked dependencies and package
+        run: |
+          python -m pip install --require-hashes -r requirements-dev.lock -r requirements-build.lock
+          python -m pip install --no-deps --no-build-isolation -e .
+          python -m pip check
+      - run: ruff check .
+      - run: pytest
+      - name: Real PostgreSQL and Redis integration
+        run: |
+          alembic upgrade head
+          pytest -m integration
+      - id: meta
+        run: python scripts/release_metadata.py
+      - uses: docker/setup-buildx-action@v4
+      - name: Build production image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          push: false
+          tags: booking-bot:ci
+          build-args: |
+            APP_VERSION=${{ steps.meta.outputs.version }}
+            VCS_REF=${{ github.sha }}
+      - name: Build hardened socket proxy
+        run: >-
+          docker build --build-arg APP_VERSION=${{ steps.meta.outputs.version }}
+          --build-arg VCS_REF=${{ github.sha }}
+          -t booking-socket-proxy:ci infra/socket-proxy
+      - name: Build hardened storage for new client qualification
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          for SERVICE in postgres redis; do
+            docker build --build-arg APP_VERSION="$VERSION" --build-arg VCS_REF=${{ github.sha }} \
+              -t "ghcr.io/polen452294/booking-$SERVICE:$VERSION" "infra/$SERVICE"
+          done
+      - name: Restore, restart, outage, isolation, alerts and controlled load acceptance
+        run: >-
+          python tests/operations_smoke.py --root "$RUNNER_TEMP/phase7-ops/clients"
+          --image booking-bot:ci
+      - name: Restricted Docker API and shared proxy outage/restart acceptance
+        run: >-
+          python tests/proxy_operations_smoke.py --root "$RUNNER_TEMP/phase7-proxy/clients"
+          --image booking-bot:ci --socket-image booking-socket-proxy:ci
+      - name: Redis non-root runtime, persistent restart, restore and peer isolation
+        run: >-
+          python tests/redis_runtime_smoke.py --root "$RUNNER_TEMP/phase8-redis/clients"
+          --image booking-bot:ci
+      - name: Real backup, migration, failed update and two-client rollout
+        run: >-
+          python tests/release_rollout_smoke.py --root "$RUNNER_TEMP/phase6-rollout"
+          --image booking-bot:ci

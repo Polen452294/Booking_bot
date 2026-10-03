@@ -1,0 +1,9 @@
+#!/bin/sh
+# Compatibility with the sole privilege-drop call in the pinned official entrypoint.
+set -eu
+if [ "${1:-}" != postgres ]; then
+    echo 'Only the PostgreSQL entrypoint privilege drop is supported.' >&2
+    exit 1
+fi
+shift
+exec /sbin/su-exec postgres "$@"

@@ -30,8 +30,12 @@ async def configure_specialist(
     template: SpecialistTemplate,
     *,
     replace_schedule: bool = False,
+    profile_only: bool = False,
 ) -> SpecialistProfile:
     deployment = await session.get(SpecialistProfile, 1)
+    initialized = deployment is not None
+    if profile_only and not initialized:
+        raise ValueError("Profile-only configuration requires an initialized specialist")
     if deployment is not None:
         business = await session.get(Business, deployment.business_id)
         master = await session.get(Master, deployment.master_id)
@@ -105,6 +109,9 @@ async def configure_specialist(
     location.is_active = True
     await session.flush()
 
+    if profile_only:
+        return deployment
+
     configured_keys = {item.key for item in template.services}
     existing_services = list(
         (await session.scalars(select(Service).where(Service.business_id == business.id))).all()
@@ -137,6 +144,7 @@ async def configure_specialist(
             service.buffer_before_minutes = item.buffer_before_minutes
             service.buffer_after_minutes = item.buffer_after_minutes
             service.price_minor = item.price_minor
+            service.pricing_mode = item.pricing_mode.value
             service.currency = template.profile.currency
             service.requires_approval = item.requires_approval
             service.requires_deposit = False
@@ -179,7 +187,7 @@ async def configure_specialist(
         )
         .limit(1)
     )
-    if replace_schedule or existing_working_rule is None:
+    if replace_schedule or (not initialized and existing_working_rule is None):
         await session.execute(
             delete(WorkingRule).where(
                 WorkingRule.business_id == business.id,

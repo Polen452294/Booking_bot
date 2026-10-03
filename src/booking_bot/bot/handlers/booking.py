@@ -9,6 +9,7 @@ from aiogram.types import BufferedInputFile, CallbackQuery, Message, ReplyKeyboa
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from booking_bot.bot.conversation_ui import edit_or_answer
 from booking_bot.bot.keyboards import (
     client_appointment_actions_keyboard,
     client_appointments_keyboard,
@@ -33,7 +34,10 @@ from booking_bot.db.models import (
     Service,
     TelegramUser,
 )
+from booking_bot.domain.conversations import ConversationError
+from booking_bot.domain.enums import PricingMode
 from booking_bot.services.availability import AvailabilityService, BookingConfigurationError
+from booking_bot.services.booking_requests import BookingRequestService
 from booking_bot.services.bookings import (
     AppointmentChangeNotAllowedError,
     AppointmentNotFoundError,
@@ -68,9 +72,7 @@ def _message_from_callback(callback: CallbackQuery) -> Message | None:
 
 
 async def _edit_or_answer(callback: CallbackQuery, text: str, **kwargs) -> None:
-    message = _message_from_callback(callback)
-    if message is not None:
-        await message.edit_text(text, **kwargs)
+    await edit_or_answer(callback, text, **kwargs)
 
 
 def _format_hold(summary: HoldSummary) -> str:
@@ -112,8 +114,7 @@ def _format_appointment(summary: AppointmentSummary) -> str:
     change_note = ""
     if active:
         change_note = (
-            f"\n\nПеренос и отмена доступны до "
-            f"<b>{summary.change_deadline:%d.%m.%Y %H:%M}</b>."
+            f"\n\nПеренос и отмена доступны до <b>{summary.change_deadline:%d.%m.%Y %H:%M}</b>."
             if summary.can_change
             else "\n\nСрок самостоятельного переноса и отмены уже истёк."
         )
@@ -128,12 +129,7 @@ def _format_appointment(summary: AppointmentSummary) -> str:
 
 
 def _ics_escape(value: str) -> str:
-    return (
-        value.replace("\\", "\\\\")
-        .replace("\n", "\\n")
-        .replace(";", "\\;")
-        .replace(",", "\\,")
-    )
+    return value.replace("\\", "\\\\").replace("\n", "\\n").replace(";", "\\;").replace(",", "\\,")
 
 
 def _build_appointment_ics(summary: AppointmentSummary) -> bytes:
@@ -191,8 +187,12 @@ async def _show_dates(
     business_id: UUID,
 ) -> None:
     data = await state.get_data()
-    master_id = UUID(data["master_id"])
-    service_id = UUID(data["service_id"])
+    try:
+        master_id = UUID(data["master_id"])
+        service_id = UUID(data["service_id"])
+    except (KeyError, ValueError):
+        await callback.answer("Начните выбор даты заново", show_alert=True)
+        return
     master = await session.get(Master, master_id)
     business = await session.get(Business, business_id)
     if master is None or business is None:
@@ -218,7 +218,14 @@ async def _show_dates(
             if dates
             else "В ближайшие дни свободных окон нет. Попробуйте проверить расписание позже."
         ),
-        reply_markup=dates_keyboard(dates),
+        reply_markup=dates_keyboard(
+            dates,
+            back_callback=(
+                f"rq:view:{UUID(data['request_id']).hex}"
+                if data.get("request_id")
+                else "booking:start"
+            ),
+        ),
     )
     await callback.answer()
 
@@ -258,11 +265,7 @@ async def _show_reschedule_dates(
     await state.set_state(BookingStates.rescheduling_date)
     await _edit_or_answer(
         callback,
-        (
-            "Выберите новую дату:"
-            if dates
-            else "В ближайшие дни нет свободных окон для переноса."
-        ),
+        ("Выберите новую дату:" if dates else "В ближайшие дни нет свободных окон для переноса."),
         reply_markup=dates_keyboard(
             dates,
             callback_prefix="rdate",
@@ -278,6 +281,7 @@ async def home_callback(
     callback: CallbackQuery,
     state: FSMContext,
     db_session: AsyncSession,
+    business_id: UUID,
 ) -> None:
     data = await state.get_data()
     if "hold_id" in data and "client_id" in data:
@@ -287,10 +291,20 @@ async def home_callback(
             client_id=UUID(data["client_id"]),
         )
     await state.clear()
+    from booking_bot.services.conversations import ConversationService
+    from booking_bot.services.master_access import get_master_for_user
+
+    user = await get_or_create_telegram_user(db_session, callback.from_user)
+    actor_master = await get_master_for_user(db_session, business_id=business_id, user_id=user.id)
     await _edit_or_answer(
         callback,
         "Главное меню:",
-        reply_markup=main_menu_keyboard(),
+        reply_markup=main_menu_keyboard(
+            master_access=actor_master is not None,
+            unread_count=await ConversationService().total_unread(
+                db_session, business_id=business_id, actor_user_id=user.id
+            ),
+        ),
     )
     await callback.answer()
 
@@ -376,6 +390,35 @@ async def select_service(
         service_id=str(service_id),
         master_id=str(specialist_master_id),
     )
+    service = await db_session.get(Service, service_id)
+    if service.pricing_mode == PricingMode.NEGOTIABLE.value:
+        from booking_bot.bot.handlers.requests import begin_request
+
+        await begin_request(callback, state)
+        await callback.answer()
+        return
+    if service.pricing_mode == PricingMode.FROM.value:
+        from booking_bot.bot.conversation_ui import keyboard
+        from booking_bot.domain.money import format_money
+
+        await state.set_state(BookingStates.choosing_pricing_flow)
+        price = (
+            format_money(service.price_minor, service.currency)
+            if service.price_minor is not None
+            else "уточняется"
+        )
+        await _edit_or_answer(
+            callback,
+            f"Цена: от {price}",
+            reply_markup=keyboard(
+                ("Записаться", "rq:from:book"),
+                ("Сначала обсудить", "rq:from:discuss"),
+                ("Назад", "booking:start"),
+                ("Главное меню", "menu:home"),
+            ),
+        )
+        await callback.answer()
+        return
     await _show_dates(callback, state, db_session, business_id)
 
 
@@ -406,13 +449,27 @@ async def select_date(
         return
 
     try:
-        slots = await AvailabilityService(_settings()).list_slots(
-            db_session,
-            business_id=business_id,
-            master_id=master_id,
-            service_id=service_id,
-            local_date=local_date,
-        )
+        if data.get("request_id"):
+            user = await get_or_create_telegram_user(db_session, callback.from_user)
+            slots = await BookingRequestService().list_slots(
+                db_session,
+                settings=_settings(),
+                business_id=business_id,
+                request_id=UUID(data["request_id"]),
+                actor_user_id=user.id,
+                local_date=local_date,
+            )
+        else:
+            slots = await AvailabilityService(_settings()).list_slots(
+                db_session,
+                business_id=business_id,
+                master_id=master_id,
+                service_id=service_id,
+                local_date=local_date,
+            )
+    except ConversationError:
+        await callback.answer("Условия заявки изменились. Откройте заявку заново.", show_alert=True)
+        return
     except BookingConfigurationError:
         await callback.answer("Расписание настроено некорректно", show_alert=True)
         return
@@ -473,15 +530,29 @@ async def select_slot(
 
     user = await get_or_create_telegram_user(db_session, callback.from_user)
     try:
-        hold = await BookingService(_settings()).create_hold(
-            db_session,
-            business_id=business_id,
-            master_id=master_id,
-            service_id=service_id,
-            client_id=user.id,
-            service_start=service_start,
-            local_date=local_date,
-        )
+        if data.get("request_id"):
+            hold = await BookingRequestService().create_hold(
+                db_session,
+                settings=_settings(),
+                business_id=business_id,
+                request_id=UUID(data["request_id"]),
+                actor_user_id=user.id,
+                service_start=service_start,
+                local_date=local_date,
+            )
+        else:
+            hold = await BookingService(_settings()).create_hold(
+                db_session,
+                business_id=business_id,
+                master_id=master_id,
+                service_id=service_id,
+                client_id=user.id,
+                service_start=service_start,
+                local_date=local_date,
+            )
+    except ConversationError:
+        await callback.answer("Условия заявки изменились. Откройте заявку заново.", show_alert=True)
+        return
     except SlotUnavailableError:
         await callback.answer(
             "Это время уже занято. Выберите другое.",
@@ -497,7 +568,9 @@ async def select_slot(
             summary = await BookingService(_settings()).get_hold_summary(
                 db_session, hold_id=hold.id, client_id=user.id
             )
-            await message.edit_text(_format_hold(summary), reply_markup=confirmation_keyboard())
+            await _edit_or_answer(
+                callback, _format_hold(summary), reply_markup=confirmation_keyboard()
+            )
     else:
         await state.set_state(BookingStates.waiting_phone)
         if message is not None:
@@ -535,6 +608,9 @@ async def receive_contact(
         db_session,
         appointment_ids=merged_appointment_ids,
     )
+    from booking_bot.bot.middlewares import persist_before_response
+
+    await persist_before_response(db_session, state)
     await message.answer("Телефон сохранен.", reply_markup=ReplyKeyboardRemove())
     await _show_confirmation(message, state, db_session)
 
@@ -570,14 +646,35 @@ async def confirm_booking(
     callback: CallbackQuery,
     state: FSMContext,
     db_session: AsyncSession,
+    business_id: UUID,
 ) -> None:
     data = await state.get_data()
     try:
-        summary = await BookingService(_settings()).confirm_hold(
-            db_session,
-            hold_id=UUID(data["hold_id"]),
-            client_id=UUID(data["client_id"]),
+        user = await get_or_create_telegram_user(db_session, callback.from_user)
+        if data.get("request_id"):
+            summary = await BookingRequestService().book(
+                db_session,
+                settings=_settings(),
+                business_id=business_id,
+                request_id=UUID(data["request_id"]),
+                actor_user_id=user.id,
+                hold_id=UUID(data["hold_id"]),
+            )
+        else:
+            summary = await BookingService(_settings()).confirm_hold(
+                db_session,
+                hold_id=UUID(data["hold_id"]),
+                client_id=user.id,
+            )
+    except ConversationError:
+        await callback.answer(
+            "Заявка уже записана или условия изменились. Откройте её заново.", show_alert=True
         )
+        return
+    except SlotUnavailableError:
+        await callback.answer("Этот слот уже занят. Выберите другое время.", show_alert=True)
+        await _show_dates(callback, state, db_session, business_id)
+        return
     except ClientPhoneRequiredError:
         await state.set_state(BookingStates.waiting_phone)
         await callback.answer("Нужен номер телефона", show_alert=True)
@@ -604,6 +701,9 @@ async def confirm_booking(
         return
 
     await state.clear()
+    from booking_bot.bot.middlewares import persist_before_response
+
+    await persist_before_response(db_session, state)
     status_text = (
         "Ожидает подтверждения" if summary.status == "pending_approval" else "Подтверждена"
     )
@@ -622,6 +722,14 @@ async def confirm_booking(
         reply_markup=main_menu_keyboard(),
     )
     await callback.answer("Запись подтверждена")
+
+
+@router.callback_query(F.data == "booking:confirm")
+async def stale_booking_confirmation(callback: CallbackQuery) -> None:
+    await callback.answer(
+        "Запись уже создана или подтверждение устарело. Откройте «Мои записи» / «Мои заявки».",
+        show_alert=True,
+    )
 
 
 @router.callback_query(F.data == "booking:abort")
@@ -799,12 +907,20 @@ async def repeat_client_appointment(
         service_id=str(summary.service_id),
         master_id=str(specialist_master_id),
     )
-    await _show_dates(callback, state, db_session, business_id)
+    await state.set_state(BookingStates.selecting_service)
+    await select_service(
+        callback.model_copy(update={"data": f"service:{summary.service_id}"}),
+        state,
+        db_session,
+        business_id,
+        specialist_master_id,
+    )
 
 
 @router.callback_query(F.data.startswith("appt:contact:"))
 async def contact_specialist(
     callback: CallbackQuery,
+    state: FSMContext,
     db_session: AsyncSession,
     business_id: UUID,
 ) -> None:
@@ -816,6 +932,24 @@ async def contact_specialist(
         await callback.answer("Некорректная запись", show_alert=True)
         return
     client = await get_or_create_telegram_user(db_session, callback.from_user)
+    try:
+        summary = await BookingService(_settings()).get_appointment(
+            db_session,
+            business_id=business_id,
+            client_id=client.id,
+            appointment_id=appointment_id,
+        )
+    except AppointmentNotFoundError:
+        await callback.answer("Запись не найдена", show_alert=True)
+        return
+    if summary.booking_request_id:
+        from booking_bot.bot.handlers.requests import show_conversation
+
+        await show_conversation(
+            callback, state, db_session, business_id, summary.booking_request_id
+        )
+        await callback.answer()
+        return
     specialist_user = await db_session.scalar(
         select(TelegramUser)
         .join(Master, Master.user_id == TelegramUser.id)
@@ -838,9 +972,7 @@ async def contact_specialist(
         link = f"https://t.me/{specialist_user.username}"
     else:
         link = f"tg://user?id={specialist_user.telegram_user_id}"
-    await callback.message.answer(
-        f'Связаться со специалистом: <a href="{link}">открыть чат</a>'
-    )
+    await callback.message.answer(f'Связаться со специалистом: <a href="{link}">открыть чат</a>')
     await callback.answer()
 
 

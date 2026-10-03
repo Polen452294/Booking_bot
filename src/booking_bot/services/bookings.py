@@ -4,19 +4,21 @@ from uuid import UUID
 from zoneinfo import ZoneInfo
 
 from sqlalchemy import select, update
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import DBAPIError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from booking_bot.config import Settings
 from booking_bot.db.models import (
     Appointment,
     AppointmentHistory,
+    BookingRequest,
     Business,
     CalendarEntry,
     Location,
     Master,
     MasterService,
     NotificationJob,
+    PriceProposal,
     Service,
     SlotHold,
     TelegramUser,
@@ -27,6 +29,7 @@ from booking_bot.domain.enums import (
     CalendarEntryState,
     HoldStatus,
     NotificationJobState,
+    PricingMode,
 )
 from booking_bot.services.availability import AvailabilityService, BookableSlot
 from booking_bot.services.reminder_settings import get_client_reminder_settings
@@ -87,6 +90,7 @@ class AppointmentSummary:
     status: str
     can_change: bool
     change_deadline: datetime
+    booking_request_id: UUID | None = None
 
 
 class BookingService:
@@ -154,6 +158,13 @@ class BookingService:
                 await session.flush()
         except IntegrityError as exc:
             raise SlotUnavailableError("The selected slot was just booked") from exc
+        except DBAPIError as exc:
+            # Concurrent GiST exclusion inserts can deadlock rather than return
+            # an exclusion violation. The savepoint has rolled back this hold;
+            # reuse the existing slot-conflict outcome without hiding DB outages.
+            if getattr(exc.orig, "sqlstate", None) != "40P01":
+                raise
+            raise SlotUnavailableError("The selected slot was just booked") from exc
         return hold
 
     async def get_hold_summary(
@@ -203,6 +214,62 @@ class BookingService:
         force_confirmed: bool = False,
         notify_master: bool = True,
         client_comment: str | None = None,
+        booking_request_id: UUID | None = None,
+    ) -> AppointmentSummary:
+        arguments = dict(
+            hold_id=hold_id,
+            client_id=client_id,
+            now=now,
+            created_by_user_id=created_by_user_id,
+            force_confirmed=force_confirmed,
+            notify_master=notify_master,
+            client_comment=client_comment,
+        )
+        if booking_request_id is None:
+            return await self._confirm_hold(session, **arguments)
+
+        from booking_bot.services.booking_requests import accepted_booking_context
+
+        # Lock the request before the hold, matching every request mutation.
+        async with session.begin_nested():
+            business_id = await session.scalar(
+                select(SlotHold.business_id).where(
+                    SlotHold.id == hold_id,
+                    SlotHold.client_id == client_id,
+                )
+            )
+            if business_id is None:
+                raise HoldNotFoundError
+            request, proposal = await accepted_booking_context(
+                session,
+                business_id=business_id,
+                request_id=booking_request_id,
+                client_id=client_id,
+            )
+            if created_by_user_id is not None and created_by_user_id != client_id:
+                raise AppointmentChangeNotAllowedError(
+                    "Request booking must be confirmed by client"
+                )
+            return await self._confirm_hold(
+                session,
+                **arguments,
+                request=request,
+                proposal=proposal,
+            )
+
+    async def _confirm_hold(
+        self,
+        session: AsyncSession,
+        *,
+        hold_id: UUID,
+        client_id: UUID,
+        now: datetime | None = None,
+        created_by_user_id: UUID | None = None,
+        force_confirmed: bool = False,
+        notify_master: bool = True,
+        client_comment: str | None = None,
+        request: BookingRequest | None = None,
+        proposal: PriceProposal | None = None,
     ) -> AppointmentSummary:
         now = now or datetime.now(UTC)
         hold = await session.scalar(
@@ -213,10 +280,12 @@ class BookingService:
         if hold is None:
             raise HoldNotFoundError
 
+        if hold.status != HoldStatus.ACTIVE.value:
+            # Replayed callbacks must never expire an already converted appointment.
+            raise HoldExpiredError("The slot hold is no longer active")
         entry = await session.get(CalendarEntry, hold.calendar_entry_id)
         if (
-            hold.status != HoldStatus.ACTIVE.value
-            or hold.expires_at <= now
+            hold.expires_at <= now
             or entry is None
             or entry.state != CalendarEntryState.ACTIVE.value
         ):
@@ -237,7 +306,16 @@ class BookingService:
         )
         if service is None or master is None or business is None or client is None:
             raise HoldNotFoundError
-        if not client.phone:
+        if request is not None and (
+            request.business_id != business.id
+            or request.master_id != master.id
+            or request.service_id != service.id
+            or request.client_user_id != client.id
+        ):
+            raise AppointmentChangeNotAllowedError("The hold does not match the request")
+        if request is None and service.pricing_mode == PricingMode.NEGOTIABLE.value:
+            raise AppointmentChangeNotAllowedError("Negotiable services require accepted terms")
+        if not client.phone and request is None:
             raise ClientPhoneRequiredError("Client phone is required")
 
         master_service = await session.scalar(
@@ -274,14 +352,33 @@ class BookingService:
             duration_minutes=int(
                 (hold.service_ends_at - hold.service_starts_at).total_seconds() // 60
             ),
-            price_minor=price_minor,
-            currency=service.currency,
-            client_name_snapshot=client_name,
-            client_phone_snapshot=client.phone,
+            price_minor=proposal.amount_minor if proposal else price_minor,
+            currency=proposal.currency if proposal else service.currency,
+            booking_request_id=request.id if request else None,
+            client_name_snapshot=request.client_name_snapshot if request else client_name,
+            client_phone_snapshot=request.client_phone_snapshot if request else client.phone,
             client_comment=client_comment,
         )
         session.add(appointment)
         await session.flush()
+        if request is not None:
+            from booking_bot.domain.enums import BookingRequestStatus
+            from booking_bot.services.conversation_context import record_event, transition
+
+            transition(request, BookingRequestStatus.BOOKED)
+            await record_event(
+                session,
+                request=request,
+                actor_user_id=client.id,
+                action="appointment_created",
+                details={
+                    "appointment_id": str(appointment.id),
+                    "proposal_id": str(proposal.id),
+                    "amount_minor": appointment.price_minor,
+                    "currency": appointment.currency,
+                    "starts_at": appointment.service_starts_at.isoformat(),
+                },
+            )
         session.add(
             AppointmentHistory(
                 business_id=business.id,
@@ -307,6 +404,7 @@ class BookingService:
         timezone = ZoneInfo(master.timezone or business.timezone)
         return AppointmentSummary(
             appointment_id=appointment.id,
+            booking_request_id=appointment.booking_request_id,
             service_id=appointment.service_id,
             service_name=appointment.service_name_snapshot,
             master_name=master.display_name,
@@ -356,9 +454,10 @@ class BookingService:
         if hold is None:
             raise HoldNotFoundError
         entry = await session.get(CalendarEntry, hold.calendar_entry_id)
+        if hold.status != HoldStatus.ACTIVE.value:
+            raise HoldExpiredError("The slot hold is no longer active")
         if (
-            hold.status != HoldStatus.ACTIVE.value
-            or hold.expires_at <= now
+            hold.expires_at <= now
             or entry is None
             or entry.state != CalendarEntryState.ACTIVE.value
         ):
@@ -526,9 +625,7 @@ class BookingService:
         if before is not None:
             query = query.where(Appointment.service_starts_at < before)
         rows = (
-            await session.execute(
-                query.order_by(Appointment.service_starts_at.desc()).limit(limit)
-            )
+            await session.execute(query.order_by(Appointment.service_starts_at.desc()).limit(limit))
         ).all()
         return [
             self._appointment_summary(
@@ -672,11 +769,12 @@ class BookingService:
         if hold is None:
             raise HoldNotFoundError
 
+        if hold.status != HoldStatus.ACTIVE.value:
+            raise HoldExpiredError("The slot hold is no longer active")
         old_entry = await session.get(CalendarEntry, appointment.calendar_entry_id)
         new_entry = await session.get(CalendarEntry, hold.calendar_entry_id)
         if (
-            hold.status != HoldStatus.ACTIVE.value
-            or hold.expires_at <= now
+            hold.expires_at <= now
             or new_entry is None
             or new_entry.state != CalendarEntryState.ACTIVE.value
         ):
@@ -804,11 +902,12 @@ class BookingService:
         if hold is None:
             raise HoldNotFoundError
 
+        if hold.status != HoldStatus.ACTIVE.value:
+            raise HoldExpiredError("The slot hold is no longer active")
         old_entry = await session.get(CalendarEntry, appointment.calendar_entry_id)
         new_entry = await session.get(CalendarEntry, hold.calendar_entry_id)
         if (
-            hold.status != HoldStatus.ACTIVE.value
-            or hold.expires_at <= now
+            hold.expires_at <= now
             or new_entry is None
             or new_entry.state != CalendarEntryState.ACTIVE.value
         ):
@@ -1145,6 +1244,7 @@ class BookingService:
         local_start = appointment.service_starts_at.astimezone(timezone)
         return AppointmentSummary(
             appointment_id=appointment.id,
+            booking_request_id=appointment.booking_request_id,
             service_id=appointment.service_id,
             service_name=appointment.service_name_snapshot,
             master_name=master.display_name,

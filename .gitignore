@@ -1,4 +1,7 @@
 .env
+.env.*
+!.env.example
+*.env
 .venv/
 __pycache__/
 *.py[cod]
@@ -14,4 +17,5 @@ output/
 dist/
 build/
 *.egg-info/
-
+deployments/
+backups/

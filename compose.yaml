@@ -2,17 +2,21 @@ name: ${COMPOSE_PROJECT_NAME:-telegram-specialist-booking-bot}
 
 services:
   api:
-    build: .
-    image: telegram-specialist-booking-bot-app:latest
+    build:
+      context: .
+      args:
+        APP_VERSION: ${APP_VERSION:-}
+        VCS_REF: ${VCS_REF:-unknown}
+    image: ${BOOKING_IMAGE:-booking-bot:local-build}
     env_file:
       - path: .env
         required: false
     environment:
-      DATABASE_URL: ${DOCKER_DATABASE_URL:-postgresql+asyncpg://booking:booking@postgres:5432/booking}
+      DATABASE_URL: ${DOCKER_DATABASE_URL:-postgresql+asyncpg://${POSTGRES_USER:-booking}:${POSTGRES_PASSWORD:-booking}@postgres:5432/${POSTGRES_DB:-booking}}
       REDIS_URL: ${DOCKER_REDIS_URL:-redis://redis:6379/0}
       TELEGRAM_PROXY_URL: ${DOCKER_TELEGRAM_PROXY_URL:-}
     ports:
-      - "${API_PORT:-8000}:8000"
+      - "127.0.0.1:${API_PORT:-8000}:8000"
     volumes:
       - ./specialist.toml:/app/specialist.toml:ro
     depends_on:
@@ -23,27 +27,33 @@ services:
     command: >-
       sh -c "alembic upgrade head &&
       booking-admin configure &&
-      fastapi run src/booking_bot/main.py --host 0.0.0.0 --port 8000"
+      exec python -m booking_bot.server"
+    stop_grace_period: 90s
     healthcheck:
       test:
         [
           "CMD",
           "python",
           "-c",
-          "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health/ready')",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/ready', timeout=4)",
         ]
       interval: 5s
-      timeout: 3s
+      timeout: 5s
       retries: 10
+      start_period: 20s
 
   worker:
-    build: .
-    image: telegram-specialist-booking-bot-app:latest
+    build:
+      context: .
+      args:
+        APP_VERSION: ${APP_VERSION:-}
+        VCS_REF: ${VCS_REF:-unknown}
+    image: ${BOOKING_IMAGE:-booking-bot:local-build}
     env_file:
       - path: .env
         required: false
     environment:
-      DATABASE_URL: ${DOCKER_DATABASE_URL:-postgresql+asyncpg://booking:booking@postgres:5432/booking}
+      DATABASE_URL: ${DOCKER_DATABASE_URL:-postgresql+asyncpg://${POSTGRES_USER:-booking}:${POSTGRES_PASSWORD:-booking}@postgres:5432/${POSTGRES_DB:-booking}}
       REDIS_URL: ${DOCKER_REDIS_URL:-redis://redis:6379/0}
       TELEGRAM_PROXY_URL: ${DOCKER_TELEGRAM_PROXY_URL:-}
     volumes:
@@ -57,19 +67,26 @@ services:
         condition: service_healthy
     command: booking-admin run-worker
     restart: unless-stopped
+    stop_grace_period: 120s
+    healthcheck:
+      test: ["CMD", "booking-admin", "worker-health"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 30s
 
   postgres:
     image: postgres:17-alpine
     environment:
-      POSTGRES_DB: booking
-      POSTGRES_USER: booking
-      POSTGRES_PASSWORD: booking
+      POSTGRES_DB: ${POSTGRES_DB:-booking}
+      POSTGRES_USER: ${POSTGRES_USER:-booking}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-booking}
     ports:
-      - "${POSTGRES_PORT:-55432}:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-55432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U booking -d booking"]
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -77,7 +94,7 @@ services:
   redis:
     image: redis:7.4-alpine
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s

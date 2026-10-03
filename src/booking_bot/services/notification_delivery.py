@@ -1,12 +1,20 @@
 import asyncio
+import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from html import escape
-from uuid import UUID
+from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
 from aiogram import Bot
-from aiogram.exceptions import TelegramForbiddenError
+from aiogram.exceptions import (
+    TelegramBadRequest,
+    TelegramForbiddenError,
+    TelegramNotFound,
+    TelegramRetryAfter,
+    TelegramUnauthorizedError,
+)
+from aiogram.types import InlineKeyboardMarkup
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,9 +30,17 @@ from booking_bot.db.models import (
     TelegramUser,
 )
 from booking_bot.db.session import async_session_factory
+from booking_bot.domain.conversations import ConversationAccessError
 from booking_bot.domain.enums import NotificationJobState
+from booking_bot.domain.money import format_money
+from booking_bot.services.conversation_context import REQUEST_NOTIFICATION_TITLES, get_request
+from booking_bot.services.price_proposals import PriceProposalService
 from booking_bot.services.reminder_settings import get_client_reminder_settings
+from booking_bot.services.worker_health import HEARTBEAT_INTERVAL, WorkerHeartbeat
 from booking_bot.specialist_config import get_specialist_template
+
+logger = logging.getLogger(__name__)
+DELIVERY_TIMEOUT = 60
 
 
 class NotificationDeliveryError(RuntimeError):
@@ -39,13 +55,20 @@ MASTER_NOTIFICATION_KINDS = {
     "master_new_appointment",
     "master_appointment_cancelled_by_client",
     "master_appointment_rescheduled_by_client",
+    "master_new_booking_request",
+    "master_new_conversation_message",
+    "master_price_proposal_accepted",
+    "master_price_proposal_rejected",
+    "master_booking_request_cancelled",
 }
+CLIENT_REMINDER_KINDS = {"client_reminder_7d", "client_reminder_3d", "client_reminder_day_of"}
 
 
 @dataclass(frozen=True, slots=True)
 class DeliveryPayload:
     chat_id: int
     text: str
+    reply_markup: InlineKeyboardMarkup | None = None
 
 
 async def master_notifications_enabled(
@@ -95,8 +118,14 @@ async def toggle_master_notifications(
 
 
 class NotificationDeliveryService:
-    def __init__(self, settings: Settings) -> None:
+    def __init__(self, settings: Settings, heartbeat: WorkerHeartbeat | None = None) -> None:
         self._settings = settings
+        self._claim_token = uuid4()
+        self._heartbeat = heartbeat
+
+    async def _beat(self) -> None:
+        if self._heartbeat is not None:
+            await self._heartbeat.beat()
 
     async def run_once(
         self,
@@ -104,36 +133,97 @@ class NotificationDeliveryService:
         *,
         business_id: UUID,
         now: datetime | None = None,
+        stop: asyncio.Event | None = None,
     ) -> int:
         now = now or datetime.now(UTC)
+        if stop is not None and stop.is_set():
+            return 0
+        await self._beat()
         job_ids = await self._claim_jobs(business_id=business_id, now=now)
-        for job_id in job_ids:
-            await self._deliver_job(bot, job_id=job_id, now=now)
+        for index, job_id in enumerate(job_ids):
+            if stop is not None and stop.is_set():
+                await self._release_jobs(job_ids[index:])
+                return index
+            try:
+                async with asyncio.timeout(DELIVERY_TIMEOUT):
+                    await self._deliver_job(bot, job_id=job_id, now=now)
+                await self._beat()
+            except (Exception, asyncio.CancelledError):
+                # The current send may have reached Telegram. Leave its lease for recovery;
+                # only unstarted jobs can safely be returned without consuming an attempt.
+                await self._release_jobs(job_ids[index + 1 :])
+                raise
         return len(job_ids)
 
-    async def run_forever(self, bot: Bot, *, business_id: UUID) -> None:
-        while True:
-            processed = await self.run_once(bot, business_id=business_id)
+    async def run_forever(
+        self,
+        bot: Bot,
+        *,
+        business_id: UUID,
+        stop: asyncio.Event | None = None,
+    ) -> None:
+        stop = stop if stop is not None else asyncio.Event()
+        while not stop.is_set():
+            processed = await self.run_once(bot, business_id=business_id, stop=stop)
+            await self._beat()
             if processed == 0:
-                await asyncio.sleep(self._settings.notification_poll_interval_seconds)
+                try:
+                    async with asyncio.timeout(
+                        min(self._settings.notification_poll_interval_seconds, HEARTBEAT_INTERVAL)
+                    ):
+                        await stop.wait()
+                except TimeoutError:
+                    pass
 
-    async def _claim_jobs(self, *, business_id: UUID, now: datetime) -> list[UUID]:
-        stale_before = now - timedelta(minutes=5)
+    async def _release_jobs(self, job_ids: list[UUID]) -> None:
+        if not job_ids:
+            return
         async with async_session_factory() as session:
             await session.execute(
                 update(NotificationJob)
                 .where(
-                    NotificationJob.business_id == business_id,
+                    NotificationJob.id.in_(job_ids),
                     NotificationJob.state == NotificationJobState.PROCESSING.value,
-                    NotificationJob.updated_at < stale_before,
+                    NotificationJob.claim_token == self._claim_token,
                 )
                 .values(
                     state=NotificationJobState.PENDING.value,
-                    scheduled_for=now,
-                    last_error="Recovered stale processing job",
-                    updated_at=now,
+                    attempt_count=NotificationJob.attempt_count - 1,
+                    updated_at=datetime.now(UTC),
+                    claim_token=None,
                 )
             )
+            await session.commit()
+
+    async def _claim_jobs(self, *, business_id: UUID, now: datetime) -> list[UUID]:
+        stale_before = now - timedelta(minutes=5)
+        async with async_session_factory() as session:
+            stale_jobs = list(
+                (
+                    await session.scalars(
+                        select(NotificationJob)
+                        .where(
+                            NotificationJob.business_id == business_id,
+                            NotificationJob.state == NotificationJobState.PROCESSING.value,
+                            NotificationJob.updated_at < stale_before,
+                        )
+                        .with_for_update(skip_locked=True)
+                        .limit(self._settings.notification_batch_size)
+                    )
+                ).all()
+            )
+            for job in stale_jobs:
+                job.state = (
+                    NotificationJobState.FAILED.value
+                    if job.attempt_count >= self._settings.notification_max_attempts
+                    else NotificationJobState.PENDING.value
+                )
+                job.claim_token = None
+                job.scheduled_for = now
+                job.last_error = "Recovered stale processing job; delivery may have occurred"
+                job.updated_at = now
+                logger.info("Stale job recovered job_id=%s state=%s", job.id, job.state)
+            await session.flush()
             jobs = list(
                 (
                     await session.scalars(
@@ -149,49 +239,94 @@ class NotificationDeliveryService:
                     )
                 ).all()
             )
+            claimed = []
             for job in jobs:
+                if job.attempt_count >= self._settings.notification_max_attempts:
+                    job.state = NotificationJobState.FAILED.value
+                    job.last_error = "Maximum delivery attempts reached"
+                    job.claim_token = None
+                    logger.warning("Job permanently failed job_id=%s", job.id)
+                    continue
                 job.state = NotificationJobState.PROCESSING.value
+                job.claim_token = self._claim_token
                 job.attempt_count += 1
                 job.updated_at = now
+                claimed.append(job.id)
+                logger.info("Job claimed job_id=%s attempt=%s", job.id, job.attempt_count)
             await session.commit()
-            return [job.id for job in jobs]
+            return claimed
 
     async def _deliver_job(self, bot: Bot, *, job_id: UUID, now: datetime) -> None:
         async with async_session_factory() as session:
-            job = await session.get(NotificationJob, job_id)
+            # Hold the row lock across the bounded send and commit. Stale recovery skips
+            # this row, and a delayed former owner cannot send a reclaimed job.
+            job = await session.scalar(
+                select(NotificationJob)
+                .where(
+                    NotificationJob.id == job_id,
+                    NotificationJob.claim_token == self._claim_token,
+                )
+                .with_for_update()
+            )
             if job is None or job.state != NotificationJobState.PROCESSING.value:
                 return
             try:
                 if not await self._is_enabled(session, job):
                     job.state = NotificationJobState.CANCELLED.value
-                    job.last_error = "Disabled by recipient preference"
+                    job.last_error = "Disabled or stale notification"
+                    job.claim_token = None
                     await session.commit()
                     return
                 payload = await self._build_payload(session, job)
-                await bot.send_message(chat_id=payload.chat_id, text=payload.text)
-            except TelegramForbiddenError as exc:
+                kwargs = {"chat_id": payload.chat_id, "text": payload.text}
+                if payload.reply_markup is not None:
+                    kwargs["reply_markup"] = payload.reply_markup
+                await bot.send_message(**kwargs)
+            except (
+                TelegramForbiddenError,
+                TelegramBadRequest,
+                TelegramNotFound,
+                TelegramUnauthorizedError,
+                UnsupportedNotificationError,
+            ) as exc:
                 job.state = NotificationJobState.FAILED.value
-                job.last_error = str(exc)[:2000]
-            except UnsupportedNotificationError as exc:
-                job.state = NotificationJobState.FAILED.value
-                job.last_error = str(exc)[:2000]
+                job.last_error = type(exc).__name__
             except Exception as exc:
-                job.last_error = str(exc)[:2000]
+                job.last_error = type(exc).__name__
                 if job.attempt_count >= self._settings.notification_max_attempts:
                     job.state = NotificationJobState.FAILED.value
                 else:
                     delays = (15, 60, 300, 900, 3600)
                     delay = delays[min(job.attempt_count - 1, len(delays) - 1)]
+                    if isinstance(exc, TelegramRetryAfter):
+                        delay = max(delay, exc.retry_after)
                     job.state = NotificationJobState.PENDING.value
-                    job.scheduled_for = now + timedelta(seconds=delay)
+                    job.scheduled_for = datetime.now(UTC) + timedelta(seconds=delay)
             else:
                 job.state = NotificationJobState.SENT.value
                 job.sent_at = datetime.now(UTC)
                 job.last_error = None
             job.updated_at = datetime.now(UTC)
+            job.claim_token = None
             await session.commit()
+            if job.state == NotificationJobState.SENT.value:
+                logger.info("Job sent job_id=%s", job.id)
+            elif job.state == NotificationJobState.PENDING.value:
+                logger.info("Job retry scheduled job_id=%s at=%s", job.id, job.scheduled_for)
+            else:
+                logger.warning("Job permanently failed job_id=%s reason=%s", job.id, job.last_error)
 
     async def _is_enabled(self, session: AsyncSession, job: NotificationJob) -> bool:
+        if job.kind == "client_price_proposal":
+            from booking_bot.services.conversation_context import latest_proposal
+
+            proposal = await latest_proposal(session, job.booking_request_id)
+            if (
+                proposal is None
+                or proposal.status != "pending"
+                or str(proposal.id) != (job.payload or {}).get("event_id")
+            ):
+                return False
         if job.appointment_id is not None and (
             job.kind.startswith("client_reminder_")
             or job.kind in {"master_new_appointment", "client_schedule_changed"}
@@ -230,6 +365,48 @@ class NotificationDeliveryService:
     ) -> DeliveryPayload:
         recipient = await session.get(TelegramUser, job.recipient_user_id)
         business = await session.get(Business, job.business_id)
+        if job.kind in REQUEST_NOTIFICATION_TITLES:
+            from booking_bot.bot.conversation_ui import cb, keyboard, request_link
+
+            if recipient is None or recipient.telegram_user_id is None or business is None:
+                raise UnsupportedNotificationError("Notification context is incomplete")
+            if job.booking_request_id is None:
+                raise UnsupportedNotificationError("Notification request is missing")
+            try:
+                request = await get_request(
+                    session,
+                    business_id=job.business_id,
+                    request_id=job.booking_request_id,
+                    actor_user_id=recipient.id,
+                )
+            except ConversationAccessError as exc:
+                raise UnsupportedNotificationError("Notification recipient lost access") from exc
+            text = (
+                f"<b>{REQUEST_NOTIFICATION_TITLES[job.kind]}</b>\n\n"
+                f"Услуга: <b>{escape(request.service_name_snapshot)}</b>"
+            )
+            markup = request_link(request.id, dialog="conversation_message" in job.kind)
+            if job.kind == "client_price_proposal":
+                proposals = await PriceProposalService().list_proposals(
+                    session,
+                    business_id=job.business_id,
+                    request_id=request.id,
+                    actor_user_id=recipient.id,
+                    limit=1,
+                )
+                if proposals and proposals[0].status == "pending":
+                    proposal = proposals[0]
+                    text += f"\n\n{format_money(proposal.amount_minor, proposal.currency)}"
+                    if proposal.comment:
+                        text += f"\n{escape(proposal.comment)}"
+                    markup = keyboard(
+                        ("Принять", cb("accept", proposal.id)),
+                        ("Обсудить", cb("chat", request.id)),
+                        ("Открыть заявку", cb("view", request.id)),
+                    )
+            return DeliveryPayload(
+                chat_id=recipient.telegram_user_id, text=text, reply_markup=markup
+            )
         appointment = (
             await session.get(Appointment, job.appointment_id)
             if job.appointment_id is not None
@@ -289,7 +466,7 @@ class NotificationDeliveryService:
                 f"Телефон: <code>{phone}</code>"
                 f"{location_text}"
             )
-        elif job.kind.startswith("client_reminder_"):
+        elif job.kind in CLIENT_REMINDER_KINDS:
             text = (
                 get_specialist_template().text(
                     "reminder_title",

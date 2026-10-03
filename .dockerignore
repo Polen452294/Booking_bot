@@ -6,4 +6,9 @@ __pycache__
 tmp
 output
 .env
-
+.env.*
+*.env
+specialist.toml
+tests
+docs
+deployments

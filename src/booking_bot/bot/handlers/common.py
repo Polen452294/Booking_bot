@@ -25,6 +25,23 @@ from booking_bot.specialist_config import get_specialist_template
 router = Router(name="common")
 
 
+@router.message(Command("cancel"))
+async def cancel_input(message: Message, state: FSMContext, db_session: AsyncSession) -> None:
+    from aiogram.types import ReplyKeyboardRemove
+
+    data = await state.get_data()
+    if data.get("hold_id") and message.from_user:
+        user = await get_or_create_telegram_user(db_session, message.from_user)
+        await BookingService(get_settings()).release_hold(
+            db_session,
+            hold_id=UUID(data["hold_id"]),
+            client_id=user.id,
+        )
+    await state.clear()
+    await message.answer("Ввод отменён.", reply_markup=ReplyKeyboardRemove())
+    await message.answer("Главное меню", reply_markup=main_menu_keyboard())
+
+
 @router.message(CommandStart())
 async def start_handler(
     message: Message,
@@ -34,6 +51,7 @@ async def start_handler(
 ) -> None:
     if message.from_user is None:
         return
+    previous_state = await state.get_state()
     data = await state.get_data()
     try:
         if "hold_id" in data and "client_id" in data:
@@ -45,6 +63,10 @@ async def start_handler(
     except ValueError:
         pass
     await state.clear()
+    from aiogram.types import ReplyKeyboardRemove
+
+    if previous_state is not None:
+        await message.answer("Ввод завершён.", reply_markup=ReplyKeyboardRemove())
     user = await get_or_create_telegram_user(db_session, message.from_user)
     payload = ""
     if message.text:
@@ -93,7 +115,20 @@ async def start_handler(
             specialist_name=escape(specialist.display_name),
             specialist_bio=escape(specialist.bio or ""),
         ),
-        reply_markup=main_menu_keyboard(master_access=actor_master is not None),
+        reply_markup=main_menu_keyboard(
+            master_access=actor_master is not None,
+            unread_count=await _unread_count(db_session, business_id, user.id),
+        ),
+    )
+
+
+async def _unread_count(session, business_id, actor_user_id):
+    from booking_bot.services.conversations import ConversationService
+
+    return await ConversationService().total_unread(
+        session,
+        business_id=business_id,
+        actor_user_id=actor_user_id,
     )
 
 

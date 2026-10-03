@@ -1,0 +1,1384 @@
+{
+  "captured_at_utc": "2026-10-03T07:12:23.051440+00:00",
+  "scope": "local synthetic qualification; Docker Desktop; no real VPS/Telegram/ACME",
+  "source": {
+    "branch": "master",
+    "head": "4e570a61920558581dbe257cb0008a8a325373ae",
+    "dirty": true
+  },
+  "runtime_source_hashes": {
+    "src/booking_bot/__init__.py": "d03768656eb2573c53eeb0767a20edb93594819866dfe628279e2ccf28706f93",
+    "src/booking_bot/api/__init__.py": "c5e79b75137811726e30acef2fa5cfc649514fce1c86da771535b368f43238c0",
+    "src/booking_bot/api/router.py": "c5343daca239ae3191c36cc944799ae915e4c96a6ae18461a96aa32f5e35a009",
+    "src/booking_bot/api/routes/__init__.py": "51bf83470168d705beb38744164cc071189699478cdb8ceebd28fd927f332148",
+    "src/booking_bot/api/routes/health.py": "810895a09384dc686fb4f65367c15fd02995bc3638fd2dafb7a568879f8fd350",
+    "src/booking_bot/api/routes/telegram.py": "f5f9ef1ba23c1e99b2f74e3bd02b50e25b916ee22bb2903f8c9e3240983fad9e",
+    "src/booking_bot/bot/__init__.py": "3b8f0da2229468ec75f09aaa71d5b52ca9e9dd5e3888566bcb3a4e5dcc110018",
+    "src/booking_bot/bot/commands.py": "535cd3b7025dfe2a21a3e4b13f2935886233718a7b9dec7c433acae7ff9b3237",
+    "src/booking_bot/bot/conversation_ui.py": "b09f2a2b51000f8ac85e31ab4cfe6cee2641f5e8a8888caf348c93206ddcaff5",
+    "src/booking_bot/bot/dispatcher.py": "43201260734651f989bdb85cf440d16f731f511820a1be1fca852b1568a2721b",
+    "src/booking_bot/bot/factory.py": "5bc1f72a7da492d34dbd91a482e51b838e2b5d8cf5308239953144970d8666d5",
+    "src/booking_bot/bot/handlers/__init__.py": "0e7a8a6e48f3d7f75971c4b92507eb139bfc6555ab70de0884647c94cb12cfa6",
+    "src/booking_bot/bot/handlers/booking.py": "46310d58260e7efa2b2a47b0ba9726dd2e604450966fd5b8d1096a5b70e9155f",
+    "src/booking_bot/bot/handlers/common.py": "3372dc2cf8136d6d4398a89d59bf3664adb9dbab40b5272138d60f115842c915",
+    "src/booking_bot/bot/handlers/master.py": "cd38cc4a7991937f147b9c2f0c8e0e6a7490fde6779ea63dad4bd73c24c2ee4a",
+    "src/booking_bot/bot/handlers/requests.py": "f9b55880adfa76fffd63d4a6e8e919b6b6f2eb4c12772de7a771a5ff5c429695",
+    "src/booking_bot/bot/handlers/specialist_setup.py": "a23032ad8dadc12187343d81da27fadd48ba1cb24c3198427eaacd2966fde07c",
+    "src/booking_bot/bot/keyboards.py": "29dbb30a0f0ff6b259994d4d85164a7723b038026a66fdaf658871bb9ab75c82",
+    "src/booking_bot/bot/middlewares.py": "67b5eae9f69a63c46b7fd02528a3fb68bfa99408b18905225573f348cc564182",
+    "src/booking_bot/bot/states.py": "d987357c653c8ad46ec164260c5c75ce4c75dbcf174baa60f9a8bb566380d399",
+    "src/booking_bot/bot/transactional_fsm.py": "6418d4929a0cde1e4c5f024d42b494adb2362b0b8dfdf14713a9b5f4a200076e",
+    "src/booking_bot/cli.py": "b23cb0d3fccc68e2b5db2e562b3315d76bffb3297fd97da9db8a3442d8c384d4",
+    "src/booking_bot/config.py": "66cb913fdcef9fceb08dd23f0ab3d4b4a519d069cb935f1971e616f6006914d0",
+    "src/booking_bot/db/__init__.py": "1a202d99112bd19c0cdcf8d627910a8226e697b7360cf6b5d3a746feee3672b5",
+    "src/booking_bot/db/base.py": "806defec12a0320b335143157755aeb6feacc174962ff8cb10d92a5b30bb26ef",
+    "src/booking_bot/db/migrations/env.py": "5079ca94cfb37aa87078d8a10986f27ef560141c98f659ce7bf6ee6ebde6c4c7",
+    "src/booking_bot/db/migrations/versions/a41d2c9e7b63_manual_booking_clients.py": "2b59833f29457e5cd17dcee3d8cc7614188eb525338721038d3abb82818b6e74",
+    "src/booking_bot/db/migrations/versions/a7367f120317_initial_schema.py": "b8521006a32b3b733c9c3dd4f7fadbcbb8158dde9beefab0530b64e5e90090e2",
+    "src/booking_bot/db/migrations/versions/b418d0b920ef_add_service_times.py": "2a81e1fd44cd52c49f8ebf8c129c95425d46809cc7aac9719f6f781fd92c0c3c",
+    "src/booking_bot/db/migrations/versions/b62f3d910ea4_delivery_reliability.py": "df6e81a963823031fe6c2e2ef7b045f8ad266e1bfa8e1cf4df9e8af910e9cc9f",
+    "src/booking_bot/db/migrations/versions/c30e09f8a6bd_master_cabinet_and_worker.py": "57c814072a6dbcdb54418341619914dd77f85d90d938d54592f238b3e3c516ac",
+    "src/booking_bot/db/migrations/versions/c75a01d29f10_requests_conversations_and_price_.py": "11ed38de65070f89d79f7f32436e1df10478382ea2f15241cc96942711aec17e",
+    "src/booking_bot/db/migrations/versions/d7a1c52f40b8_single_specialist_deployment.py": "2579d4e4495bfe0318d484a7119d4672476ed96dfec316d6f50d3f1c524fa8cf",
+    "src/booking_bot/db/migrations/versions/e82f19b601d4_remove_multi_bot_installations.py": "de562c095141401b8ef9c371f222670bc254eb4b618a8de8cc7e88979fc78bac",
+    "src/booking_bot/db/migrations/versions/f9135a4b8c72_owner_managed_services.py": "6187c5a0bd313b4e498b7dce9d74f4e6bab83da949f697bb821650ddf7428133",
+    "src/booking_bot/db/models/__init__.py": "b31f78b80de8e963a19036e2f8ee004f3fce0cfd5a28a549a8239a572abe74f5",
+    "src/booking_bot/db/models/appointments.py": "5d8f12f806d51c502147df12898ebca52ee7710e79b7545ea770754a893ec439",
+    "src/booking_bot/db/models/business.py": "8580f73f5032045ad9838f730e1dc81b6c632419d244596d08a67b24617542c0",
+    "src/booking_bot/db/models/catalog.py": "16a34863dccfc6f075e76f2a71149ccf1174c6c6ed23fd7a82e10f90af3c9d5e",
+    "src/booking_bot/db/models/conversations.py": "46dc273c1c6f7488cc84a4056d7adc579d60f10f86b265868bcdfec1eef439ec",
+    "src/booking_bot/db/models/notifications.py": "cc760f74fd5b4338da18ee8fd47bf5d743c38c3252dfe090b42901da34bc69d3",
+    "src/booking_bot/db/models/schedule.py": "56b7db8a2ba26d86197031c5f9fe7076237380887cc730dc10be67ef68c72983",
+    "src/booking_bot/db/models/telegram.py": "18c6d88dd9d3f7d2566fff6d71783c5a9e56039611ede8c4aa8c7dfd67a25372",
+    "src/booking_bot/db/session.py": "4e646127639f48e59d97c353ae4753bea40fe2a211f3022c6fd4814257a93437",
+    "src/booking_bot/deployment/__init__.py": "69529597eb5e7d76572f58f74c5a719f8e445213a6290ab499d9d8cc0103ca74",
+    "src/booking_bot/deployment/alerts.py": "24d155146d14649dd1e3af0e0b850631b47ec647a32959981625413b704a4243",
+    "src/booking_bot/deployment/backup.py": "81a9b277c0b8f19c2d8b666efb728ec188d60cd77f4c0d77aea4bd3ddcdad8db",
+    "src/booking_bot/deployment/backup_remote.py": "57c87df6f8eb575cca80c5eec9aaf8ad74f0eaddfe5428b29ac58ab655e26954",
+    "src/booking_bot/deployment/backup_schedule.py": "ee2f693519d6cd2dc269a94eae777692d0b82f9eedc96574c11c649d24e82495",
+    "src/booking_bot/deployment/cli.py": "f97074dd18a72ac5aa1131a5b028929d16c8afe50bc184680aa610162ad5b5e3",
+    "src/booking_bot/deployment/configuration.py": "7d17c066bf2511dcaf0a240e8ea088879e49370bcb87b593ae34764c394c6d03",
+    "src/booking_bot/deployment/diagnostics.py": "21fd6ec4dfe55e592db9790cd3f545e44727891a4b70d022605d516fc1fc0c14",
+    "src/booking_bot/deployment/files.py": "4d186599778fffcdab7badb36d5a0d2e2e4a424b2b852ea4f55f5b5b369620c7",
+    "src/booking_bot/deployment/manager.py": "48d0055e9624814f40b0b22671a2ac1c72e6693986c76a434f9a61f42a50906c",
+    "src/booking_bot/deployment/monitor_schedule.py": "f384aeb7eae96801dad0f859bbee0ed67fd8347e6a5870f1e6fa2a8f9fc5af44",
+    "src/booking_bot/deployment/monitoring.py": "b7ef1aaed1d60f469da601d9ab62c6e40c0b9a0841404897bab8f5eff93b331e",
+    "src/booking_bot/deployment/proxy.py": "6843d27359eac81448b949a7f8a31c031e519e2b81c6a0a8ca60270eaea4c524",
+    "src/booking_bot/deployment/releases.py": "74d12c88dbc131450130c2c6c7eac01906c8671ed73a647bfc695a58e11eac46",
+    "src/booking_bot/deployment/runtime.py": "93e31ae0581f0cc9e051e7b38d8d253ac8b86d130dd4906ba9f8685634de9242",
+    "src/booking_bot/deployment/templates.py": "dfe33e87e71bed848fdd188ed34153e7e7ef634e7550c77b8620e3f9460f6c54",
+    "src/booking_bot/domain/__init__.py": "3c9fbc686f3e34ed1cd07b8d2b2bed6361278e67778381a00521bd535fdaf0b4",
+    "src/booking_bot/domain/conversations.py": "54f9e9326f6689e1aa07404d2f7eab8597de410114dea74dfddd69f5a66b4de4",
+    "src/booking_bot/domain/enums.py": "beae93044590faec3befab977c5cbdb18c82363ea86a89302e490ce71eff9728",
+    "src/booking_bot/domain/money.py": "15274f11a4fbf6cb85ef9d169b87116d08d086475a03f50d6e53fa10a76f6667",
+    "src/booking_bot/lifecycle.py": "9d9278b6320f7295b002da608db5c116743cf8f6d8453b37bc84aa8a7d0511b5",
+    "src/booking_bot/logging_config.py": "98f4ce2692d34156144cf596e5d78b82e3c7a5eab6dc274179326ddf79dd2844",
+    "src/booking_bot/main.py": "c47eaf621b4e312b33e1217b027c5c0b1533e60cc09607bcdebb5ac63a015c83",
+    "src/booking_bot/server.py": "3a44f2f99dd3017818e99b9bf54998330a03a8512650d4cf89edfa8eaefb3ee1",
+    "src/booking_bot/services/__init__.py": "5ee368b8b403ddb926e38792d6c660d7a6ec88ea5bd628ded82a91e52931d2f1",
+    "src/booking_bot/services/analytics.py": "409958bad57fb8b68ac78a9dac162d6756f6ad4f492c8f4dac0817f686e3168e",
+    "src/booking_bot/services/appointment_export.py": "59900744f6ee57ea553af92004a33ef61fa48472f67d86ebbec464fce01be182",
+    "src/booking_bot/services/availability.py": "b530447388a36d612649346718e428ce059b285411d45bdfc8bc22620d123c3d",
+    "src/booking_bot/services/booking_requests.py": "fa2c8491e69691fea1476166349729ed811e36bd93560e329186fb690a0279fa",
+    "src/booking_bot/services/bookings.py": "654519788791d261cd0b43c53cec695ea4915199ada0d226059c700c5084d596",
+    "src/booking_bot/services/conversation_context.py": "76f5b9f5cc654762f34f4b53ecfd9be566fd550aace2310fb24ebe97870d9c34",
+    "src/booking_bot/services/conversations.py": "88b3cdfce58cddbeb99205be57532ee30451e11ba087d07c6649eaaf49c8963f",
+    "src/booking_bot/services/master_access.py": "10f610d26188b78d9fc73e6712fadf7a07f4bd336d07e6a99e63809ad542a576",
+    "src/booking_bot/services/master_schedule.py": "1e417225fe6f7cac90d92b5b66f77fbd8b49289f64953828e67b6ff067b8a782",
+    "src/booking_bot/services/notification_delivery.py": "31b4c21e59f90d21173ff3b112cc318712d809b802b89f7ad7ca214b53c19adf",
+    "src/booking_bot/services/notification_operations.py": "68d7bb301010b9b07f24771aa7ace6040b49d187e9348e252ec14dd523801ccd",
+    "src/booking_bot/services/price_proposals.py": "6addf2e4ce3be40155b6873e6d7cb63e01deff5d298f07c7d5c75acd6c5d627e",
+    "src/booking_bot/services/reminder_settings.py": "54853a929a5d9155a947eb5e151875942d11ec75d8c0de7bdbad6ac0e6db6f08",
+    "src/booking_bot/services/service_catalog.py": "c8a4f92017bb6468e7dc4743c637742b5d42eec501aa20e503aee15506e1e051",
+    "src/booking_bot/services/slot_engine.py": "714e34eae6217a709f5e7a4e9de1df5573dea38e6083882cdc138085aab34401",
+    "src/booking_bot/services/specialist_context.py": "15be3fa89664213e72638bf37f50bf1faaaf9a63311d3d8254c4505dc41a11f6",
+    "src/booking_bot/services/specialist_setup.py": "7691914635e0dbce8dd9cd255bb0dc6874b291ad3a08363c6d781093559ea1c9",
+    "src/booking_bot/services/telegram_webhook.py": "dd4d9efb5957114f32cc8a062fbfd2c604da51ce5055f6cd140e6c444b9ea824",
+    "src/booking_bot/services/update_idempotency.py": "b4d76a3e71d4db0d0822d8a65652f0891b5ef6fc2565d9203648c94b6c865e1d",
+    "src/booking_bot/services/users.py": "bfc5ccf8fc12c2544ce96b2c1312370fbebc4cb66b71beca980a6895a46f8839",
+    "src/booking_bot/services/worker_health.py": "39829dff97093cda473972a1a2b972269a42934149f531a193a6626fc1aaf3e0",
+    "src/booking_bot/specialist_config.py": "9b59f2de10a0869284a4a87a60ba5b323c75f5f166466a3e84241481c7d71a0d",
+    "src/booking_bot/version.py": "44d5cce01e7c47fc9269c57be9cf537a62a2d155044d06b1a9d3061dc51ca45a",
+    "Dockerfile": "8a1461abb10aade1c3c1a1a50197afb1c387fa3b6819510a8d37b7b605cbb4d4",
+    "pyproject.toml": "81b9199ff0f29ac33188d2e28de9be3421e4b961910e64ca24499d3cc8b7b161",
+    "requirements.lock": "0e97b0c90bfff1acabce1fedcd000ee456e38468891b5cf20a298dbe3de7eee5",
+    "requirements-build.lock": "91b24c08699b080acf6fb82344f8bd5d8e1a3bdb0f89557315418c7a5b88f592"
+  },
+  "images": {
+    "booking-bot": {
+      "reference": "ghcr.io/polen452294/booking-bot:1.0.0-rc.1",
+      "id": "sha256:596ad2f62dfd87fdc493a49a52756b1e0a2eb5575fa51a916233df95841a42bd",
+      "size_bytes": 61105397,
+      "labels": {
+        "org.opencontainers.image.revision": "4e570a61920558581dbe257cb0008a8a325373ae",
+        "org.opencontainers.image.source": "https://github.com/Polen452294/Booking_bot",
+        "org.opencontainers.image.title": "Booking bot",
+        "org.opencontainers.image.version": "1.0.0-rc.1"
+      }
+    },
+    "booking-socket-proxy": {
+      "reference": "ghcr.io/polen452294/booking-socket-proxy:1.0.0-rc.1",
+      "id": "sha256:527e1273fe7c58c6380ff212625ecb4c5eeaead5149d344477b7993733b734e0",
+      "size_bytes": 23369075,
+      "labels": {
+        "org.opencontainers.image.created": "2026-07-27T09:28:41.172Z",
+        "org.opencontainers.image.description": "Proxy over your Docker socket to restrict which requests it accepts",
+        "org.opencontainers.image.licenses": "Apache-2.0",
+        "org.opencontainers.image.revision": "4e570a61920558581dbe257cb0008a8a325373ae",
+        "org.opencontainers.image.source": "https://github.com/Polen452294/Booking_bot",
+        "org.opencontainers.image.title": "Booking restricted Docker API",
+        "org.opencontainers.image.url": "https://github.com/Tecnativa/docker-socket-proxy",
+        "org.opencontainers.image.version": "1.0.0-rc.1"
+      }
+    },
+    "booking-postgres": {
+      "reference": "ghcr.io/polen452294/booking-postgres:1.0.0-rc.1",
+      "id": "sha256:dcd8c485080e5ddfe6894e6ddeb5a754ffe7c98963ae1ed652175f19eb63146c",
+      "size_bytes": 117242691,
+      "labels": {
+        "org.opencontainers.image.revision": "4e570a61920558581dbe257cb0008a8a325373ae",
+        "org.opencontainers.image.source": "https://github.com/Polen452294/Booking_bot",
+        "org.opencontainers.image.title": "Booking PostgreSQL 17",
+        "org.opencontainers.image.version": "1.0.0-rc.1"
+      }
+    },
+    "booking-redis": {
+      "reference": "ghcr.io/polen452294/booking-redis:1.0.0-rc.1",
+      "id": "sha256:31230ebf70713c65a75bd1dde645e1dbaa2bcbd342f8387fdbdfc214ee2713d3",
+      "size_bytes": 18566813,
+      "labels": {
+        "org.opencontainers.image.revision": "4e570a61920558581dbe257cb0008a8a325373ae",
+        "org.opencontainers.image.source": "https://github.com/Polen452294/Booking_bot",
+        "org.opencontainers.image.title": "Booking Redis 7.4",
+        "org.opencontainers.image.version": "1.0.0-rc.1"
+      }
+    },
+    "traefik": {
+      "reference": "traefik:v3.7.13",
+      "id": "sha256:24841fe2de7304c149343d877d2923b4c8800a38ba015dea9174c23b20e344a0",
+      "size_bytes": 55222642,
+      "labels": {
+        "org.opencontainers.image.description": "A modern reverse-proxy",
+        "org.opencontainers.image.documentation": "https://docs.traefik.io",
+        "org.opencontainers.image.source": "https://github.com/traefik/traefik",
+        "org.opencontainers.image.title": "Traefik",
+        "org.opencontainers.image.url": "https://traefik.io",
+        "org.opencontainers.image.vendor": "Traefik Labs",
+        "org.opencontainers.image.version": "v3.7.13"
+      }
+    }
+  },
+  "scans": [
+    {
+      "artifact": "tmp/phase8-scan-final-app.json",
+      "sha256": "c45792640a31b92963dc4857261e5d3f9ee275fd9bf5b6b9f4f3dd4396e7bd49",
+      "image_id": "sha256:deaf2369e1145f68dbe2e7493f21967e26ec1f5af09143dfca19f82c15297f87",
+      "high": 0,
+      "critical": 0
+    },
+    {
+      "artifact": "tmp/phase8-scan-fixed-socket-proxy.json",
+      "sha256": "8abd926bedd2a8786d1071dfdb3e4cfe6ed7667e714830fb6b45f7a11ff1bdac",
+      "image_id": "sha256:d446d50df6ba5f425fa89b34ff9c5f940379ab272b582e812a24c1a2c75e9342",
+      "high": 0,
+      "critical": 0
+    },
+    {
+      "artifact": "tmp/phase8-scan-fixed-postgres.json",
+      "sha256": "c73968189095021305fd231cce1d58233770904b9c596e2fdb681c23df3975c4",
+      "image_id": "sha256:48d300c25dfe4897179bee080e48595a37951237491a024669203392b3470fb8",
+      "high": 0,
+      "critical": 0
+    },
+    {
+      "artifact": "tmp/phase8-scan-final-redis.json",
+      "sha256": "099984d956544ba8e455e3e2ffda5222094edfae75b9178fd9947dee16990448",
+      "image_id": "sha256:94509194f036aabe1216df75f2bd8de95db57c6b85fd49ddc5b92c282a000503",
+      "high": 0,
+      "critical": 0
+    },
+    {
+      "artifact": "tmp/phase8-scan-traefik.json",
+      "sha256": "d4e40ec1dcdff43418cb903c7b7fdb58696aec51b4076cb58f6f5b8d788a7751",
+      "image_id": "sha256:f9309349d2c1477b15d04728f38882ba2e9a50b7f76729541121a7ee60d53490",
+      "high": 0,
+      "critical": 0
+    }
+  ],
+  "deployments": [
+    {
+      "slug": "release-test-1",
+      "project": "booking-release-test-1-c60d28f0",
+      "stats": [
+        {
+          "BlockIO": "848kB / 0B",
+          "CPUPerc": "0.13%",
+          "Container": "18fe5db05f7c2366f038594f36ce4a10474c39ce219ae767f6f0af2301a84e1f",
+          "ID": "18fe5db05f7c",
+          "MemPerc": "2.47%",
+          "MemUsage": "192.6MiB / 7.609GiB",
+          "Name": "booking-release-test-1-c60d28f0-api-1",
+          "NetIO": "295kB / 276kB",
+          "PIDs": "6"
+        },
+        {
+          "BlockIO": "21.8MB / 104MB",
+          "CPUPerc": "0.65%",
+          "Container": "8d1f89894b2e483a3d654cb23cd219feba2f45a5ea971a42faf358a6c4ea4d3c",
+          "ID": "8d1f89894b2e",
+          "MemPerc": "0.78%",
+          "MemUsage": "60.74MiB / 7.609GiB",
+          "Name": "booking-release-test-1-c60d28f0-postgres-1",
+          "NetIO": "1.52MB / 1.22MB",
+          "PIDs": "8"
+        },
+        {
+          "BlockIO": "5.6MB / 5.09MB",
+          "CPUPerc": "3.02%",
+          "Container": "a968047d099ad96a7132d22461bc949ef1a11d359120f52f07bec29d00596f5a",
+          "ID": "a968047d099a",
+          "MemPerc": "0.06%",
+          "MemUsage": "4.793MiB / 7.609GiB",
+          "Name": "booking-release-test-1-c60d28f0-redis-1",
+          "NetIO": "543kB / 197kB",
+          "PIDs": "7"
+        },
+        {
+          "BlockIO": "0B / 0B",
+          "CPUPerc": "0.00%",
+          "Container": "396946132bd7f67d241240e9778901368d1b9fa56736233c6d356f42fe3145a8",
+          "ID": "396946132bd7",
+          "MemPerc": "2.29%",
+          "MemUsage": "178.5MiB / 7.609GiB",
+          "Name": "booking-release-test-1-c60d28f0-worker-1",
+          "NetIO": "899kB / 1.43MB",
+          "PIDs": "2"
+        }
+      ],
+      "db_size_bytes": 10344115,
+      "containers": [
+        {
+          "service": "api",
+          "image_id": "sha256:596ad2f62dfd87fdc493a49a52756b1e0a2eb5575fa51a916233df95841a42bd",
+          "user": "10001:10001",
+          "privileged": false,
+          "network_mode": "booking-release-test-1-c60d28f0_data",
+          "cap_drop": [
+            "ALL"
+          ],
+          "cap_add": null,
+          "security_opt": [
+            "no-new-privileges:true"
+          ],
+          "docker_socket_mounted": false,
+          "ports": {
+            "8000/tcp": [
+              {
+                "HostIp": "127.0.0.1",
+                "HostPort": "32947"
+              }
+            ]
+          }
+        },
+        {
+          "service": "postgres",
+          "image_id": "sha256:dcd8c485080e5ddfe6894e6ddeb5a754ffe7c98963ae1ed652175f19eb63146c",
+          "user": "",
+          "privileged": false,
+          "network_mode": "booking-release-test-1-c60d28f0_data",
+          "cap_drop": null,
+          "cap_add": null,
+          "security_opt": null,
+          "docker_socket_mounted": false,
+          "ports": {
+            "5432/tcp": null
+          }
+        },
+        {
+          "service": "redis",
+          "image_id": "sha256:31230ebf70713c65a75bd1dde645e1dbaa2bcbd342f8387fdbdfc214ee2713d3",
+          "user": "",
+          "privileged": false,
+          "network_mode": "booking-release-test-1-c60d28f0_data",
+          "cap_drop": null,
+          "cap_add": null,
+          "security_opt": null,
+          "docker_socket_mounted": false,
+          "ports": {
+            "6379/tcp": null
+          }
+        },
+        {
+          "service": "worker",
+          "image_id": "sha256:596ad2f62dfd87fdc493a49a52756b1e0a2eb5575fa51a916233df95841a42bd",
+          "user": "10001:10001",
+          "privileged": false,
+          "network_mode": "booking-release-test-1-c60d28f0_data",
+          "cap_drop": [
+            "ALL"
+          ],
+          "cap_add": null,
+          "security_opt": [
+            "no-new-privileges:true"
+          ],
+          "docker_socket_mounted": false,
+          "ports": {
+            "8000/tcp": null
+          }
+        }
+      ],
+      "log_audit": [
+        {
+          "service": "api",
+          "stream_bytes": 1144,
+          "raw_secret_matches": 0,
+          "private_sample_matches": 0,
+          "tracebacks": 0
+        },
+        {
+          "service": "postgres",
+          "stream_bytes": 3969,
+          "raw_secret_matches": 0,
+          "private_sample_matches": 0,
+          "tracebacks": 0
+        },
+        {
+          "service": "redis",
+          "stream_bytes": 3050,
+          "raw_secret_matches": 0,
+          "private_sample_matches": 0,
+          "tracebacks": 0
+        },
+        {
+          "service": "worker",
+          "stream_bytes": 273,
+          "raw_secret_matches": 0,
+          "private_sample_matches": 0,
+          "tracebacks": 0
+        }
+      ],
+      "postgres_pid1": "Uid:\t70\t70\t70\t70\nCapEff:\t0000000000000000",
+      "redis_pid1": "Uid:\t999\t999\t999\t999\nCapEff:\t0000000000000000",
+      "postgres_disk_kib": 66164,
+      "backup_disk_bytes": 215158
+    },
+    {
+      "slug": "release-test-2",
+      "project": "booking-release-test-2-312c23b4",
+      "stats": [
+        {
+          "BlockIO": "2.79MB / 0B",
+          "CPUPerc": "1.76%",
+          "Container": "de88ba5701d86896c189b6ea202e10488f0c0a5d9792ef08accf0ba443688b60",
+          "ID": "de88ba5701d8",
+          "MemPerc": "2.53%",
+          "MemUsage": "197.3MiB / 7.609GiB",
+          "Name": "booking-release-test-2-312c23b4-api-1",
+          "NetIO": "323kB / 302kB",
+          "PIDs": "11"
+        },
+        {
+          "BlockIO": "2.17MB / 81.8MB",
+          "CPUPerc": "0.06%",
+          "Container": "53391dd86760bc2a41cd54a515881e4c2b1d74146b9bf6ce23f8caa68c642ac9",
+          "ID": "53391dd86760",
+          "MemPerc": "0.56%",
+          "MemUsage": "43.39MiB / 7.609GiB",
+          "Name": "booking-release-test-2-312c23b4-postgres-1",
+          "NetIO": "1.45MB / 1.16MB",
+          "PIDs": "8"
+        },
+        {
+          "BlockIO": "5.44MB / 5.5MB",
+          "CPUPerc": "2.36%",
+          "Container": "61ea93bb4ccc29b2ff7aafbca10aec4927808f38073f23b63b9a721b188d36c1",
+          "ID": "61ea93bb4ccc",
+          "MemPerc": "0.05%",
+          "MemUsage": "3.84MiB / 7.609GiB",
+          "Name": "booking-release-test-2-312c23b4-redis-1",
+          "NetIO": "579kB / 208kB",
+          "PIDs": "6"
+        },
+        {
+          "BlockIO": "172kB / 0B",
+          "CPUPerc": "0.32%",
+          "Container": "4d58f608b90b3e12372cd634825f6dcbf752409f877fd9e3624982f1e32e2110",
+          "ID": "4d58f608b90b",
+          "MemPerc": "2.29%",
+          "MemUsage": "178.6MiB / 7.609GiB",
+          "Name": "booking-release-test-2-312c23b4-worker-1",
+          "NetIO": "982kB / 1.56MB",
+          "PIDs": "2"
+        }
+      ],
+      "db_size_bytes": 10385075,
+      "containers": [
+        {
+          "service": "api",
+          "image_id": "sha256:596ad2f62dfd87fdc493a49a52756b1e0a2eb5575fa51a916233df95841a42bd",
+          "user": "10001:10001",
+          "privileged": false,
+          "network_mode": "booking-release-test-2-312c23b4_data",
+          "cap_drop": [
+            "ALL"
+          ],
+          "cap_add": null,
+          "security_opt": [
+            "no-new-privileges:true"
+          ],
+          "docker_socket_mounted": false,
+          "ports": {
+            "8000/tcp": [
+              {
+                "HostIp": "127.0.0.1",
+                "HostPort": "32945"
+              }
+            ]
+          }
+        },
+        {
+          "service": "postgres",
+          "image_id": "sha256:dcd8c485080e5ddfe6894e6ddeb5a754ffe7c98963ae1ed652175f19eb63146c",
+          "user": "",
+          "privileged": false,
+          "network_mode": "booking-release-test-2-312c23b4_data",
+          "cap_drop": null,
+          "cap_add": null,
+          "security_opt": null,
+          "docker_socket_mounted": false,
+          "ports": {
+            "5432/tcp": null
+          }
+        },
+        {
+          "service": "redis",
+          "image_id": "sha256:31230ebf70713c65a75bd1dde645e1dbaa2bcbd342f8387fdbdfc214ee2713d3",
+          "user": "",
+          "privileged": false,
+          "network_mode": "booking-release-test-2-312c23b4_data",
+          "cap_drop": null,
+          "cap_add": null,
+          "security_opt": null,
+          "docker_socket_mounted": false,
+          "ports": {
+            "6379/tcp": null
+          }
+        },
+        {
+          "service": "worker",
+          "image_id": "sha256:596ad2f62dfd87fdc493a49a52756b1e0a2eb5575fa51a916233df95841a42bd",
+          "user": "10001:10001",
+          "privileged": false,
+          "network_mode": "booking-release-test-2-312c23b4_data",
+          "cap_drop": [
+            "ALL"
+          ],
+          "cap_add": null,
+          "security_opt": [
+            "no-new-privileges:true"
+          ],
+          "docker_socket_mounted": false,
+          "ports": {
+            "8000/tcp": null
+          }
+        }
+      ],
+      "log_audit": [
+        {
+          "service": "api",
+          "stream_bytes": 1144,
+          "raw_secret_matches": 0,
+          "private_sample_matches": 0,
+          "tracebacks": 0
+        },
+        {
+          "service": "postgres",
+          "stream_bytes": 3949,
+          "raw_secret_matches": 0,
+          "private_sample_matches": 0,
+          "tracebacks": 0
+        },
+        {
+          "service": "redis",
+          "stream_bytes": 2437,
+          "raw_secret_matches": 0,
+          "private_sample_matches": 0,
+          "tracebacks": 0
+        },
+        {
+          "service": "worker",
+          "stream_bytes": 273,
+          "raw_secret_matches": 0,
+          "private_sample_matches": 0,
+          "tracebacks": 0
+        }
+      ],
+      "postgres_pid1": "Uid:\t70\t70\t70\t70\nCapEff:\t0000000000000000",
+      "redis_pid1": "Uid:\t999\t999\t999\t999\nCapEff:\t0000000000000000",
+      "postgres_disk_kib": 66204,
+      "backup_disk_bytes": 107561
+    }
+  ],
+  "performance": {
+    "clients": 100,
+    "requests": 200,
+    "messages": 4000,
+    "inbox_100_ms": 58.20649999077432,
+    "history_20_ms": 13.33580000209622,
+    "unread_ms": 8.987999986857176,
+    "proposal_ms": 21.32330002496019,
+    "hold_booking_ms": 98.6304999969434,
+    "plans": {
+      "total_unread": [
+        {
+          "Plan": {
+            "Node Type": "Aggregate",
+            "Strategy": "Plain",
+            "Partial Mode": "Simple",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Startup Cost": 21.78,
+            "Total Cost": 21.79,
+            "Plan Rows": 1,
+            "Plan Width": 8,
+            "Actual Startup Time": 2.022,
+            "Actual Total Time": 2.027,
+            "Actual Rows": 1,
+            "Actual Loops": 1,
+            "Shared Hit Blocks": 1267,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0,
+            "Plans": [
+              {
+                "Node Type": "Nested Loop",
+                "Parent Relationship": "Outer",
+                "Parallel Aware": false,
+                "Async Capable": false,
+                "Join Type": "Inner",
+                "Startup Cost": 13.05,
+                "Total Cost": 21.78,
+                "Plan Rows": 1,
+                "Plan Width": 0,
+                "Actual Startup Time": 0.449,
+                "Actual Total Time": 1.841,
+                "Actual Rows": 4000,
+                "Actual Loops": 1,
+                "Inner Unique": false,
+                "Shared Hit Blocks": 1267,
+                "Shared Read Blocks": 0,
+                "Shared Dirtied Blocks": 0,
+                "Shared Written Blocks": 0,
+                "Local Hit Blocks": 0,
+                "Local Read Blocks": 0,
+                "Local Dirtied Blocks": 0,
+                "Local Written Blocks": 0,
+                "Temp Read Blocks": 0,
+                "Temp Written Blocks": 0,
+                "Plans": [
+                  {
+                    "Node Type": "Hash Join",
+                    "Parent Relationship": "Outer",
+                    "Parallel Aware": false,
+                    "Async Capable": false,
+                    "Join Type": "Inner",
+                    "Startup Cost": 9.87,
+                    "Total Cost": 16.18,
+                    "Plan Rows": 1,
+                    "Plan Width": 16,
+                    "Actual Startup Time": 0.423,
+                    "Actual Total Time": 0.482,
+                    "Actual Rows": 200,
+                    "Actual Loops": 1,
+                    "Inner Unique": true,
+                    "Hash Cond": "(conversations.booking_request_id = booking_requests.id)",
+                    "Shared Hit Blocks": 410,
+                    "Shared Read Blocks": 0,
+                    "Shared Dirtied Blocks": 0,
+                    "Shared Written Blocks": 0,
+                    "Local Hit Blocks": 0,
+                    "Local Read Blocks": 0,
+                    "Local Dirtied Blocks": 0,
+                    "Local Written Blocks": 0,
+                    "Temp Read Blocks": 0,
+                    "Temp Written Blocks": 0,
+                    "Plans": [
+                      {
+                        "Node Type": "Seq Scan",
+                        "Parent Relationship": "Outer",
+                        "Parallel Aware": false,
+                        "Async Capable": false,
+                        "Relation Name": "conversations",
+                        "Alias": "conversations",
+                        "Startup Cost": 0.0,
+                        "Total Cost": 5.61,
+                        "Plan Rows": 261,
+                        "Plan Width": 32,
+                        "Actual Startup Time": 0.008,
+                        "Actual Total Time": 0.023,
+                        "Actual Rows": 200,
+                        "Actual Loops": 1,
+                        "Shared Hit Blocks": 3,
+                        "Shared Read Blocks": 0,
+                        "Shared Dirtied Blocks": 0,
+                        "Shared Written Blocks": 0,
+                        "Local Hit Blocks": 0,
+                        "Local Read Blocks": 0,
+                        "Local Dirtied Blocks": 0,
+                        "Local Written Blocks": 0,
+                        "Temp Read Blocks": 0,
+                        "Temp Written Blocks": 0
+                      },
+                      {
+                        "Node Type": "Hash",
+                        "Parent Relationship": "Inner",
+                        "Parallel Aware": false,
+                        "Async Capable": false,
+                        "Startup Cost": 9.86,
+                        "Total Cost": 9.86,
+                        "Plan Rows": 1,
+                        "Plan Width": 16,
+                        "Actual Startup Time": 0.41,
+                        "Actual Total Time": 0.412,
+                        "Actual Rows": 200,
+                        "Actual Loops": 1,
+                        "Hash Buckets": 1024,
+                        "Original Hash Buckets": 1024,
+                        "Hash Batches": 1,
+                        "Original Hash Batches": 1,
+                        "Peak Memory Usage": 18,
+                        "Shared Hit Blocks": 407,
+                        "Shared Read Blocks": 0,
+                        "Shared Dirtied Blocks": 0,
+                        "Shared Written Blocks": 0,
+                        "Local Hit Blocks": 0,
+                        "Local Read Blocks": 0,
+                        "Local Dirtied Blocks": 0,
+                        "Local Written Blocks": 0,
+                        "Temp Read Blocks": 0,
+                        "Temp Written Blocks": 0,
+                        "Plans": [
+                          {
+                            "Node Type": "Index Scan",
+                            "Parent Relationship": "Outer",
+                            "Parallel Aware": false,
+                            "Async Capable": false,
+                            "Scan Direction": "Forward",
+                            "Index Name": "ix_booking_requests_business_status_created",
+                            "Relation Name": "booking_requests",
+                            "Alias": "booking_requests",
+                            "Startup Cost": 0.14,
+                            "Total Cost": 9.86,
+                            "Plan Rows": 1,
+                            "Plan Width": 16,
+                            "Actual Startup Time": 0.029,
+                            "Actual Total Time": 0.38,
+                            "Actual Rows": 200,
+                            "Actual Loops": 1,
+                            "Index Cond": "(business_id = '73f6e3c0-e8b4-4902-93e4-fae4280aa680'::uuid)",
+                            "Rows Removed by Index Recheck": 0,
+                            "Filter": "(((status)::text <> 'draft'::text) AND ((client_user_id = 'dd672164-6327-4191-bf03-3af6ab0a34a2'::uuid) OR EXISTS(SubPlan 2)))",
+                            "Rows Removed by Filter": 0,
+                            "Shared Hit Blocks": 407,
+                            "Shared Read Blocks": 0,
+                            "Shared Dirtied Blocks": 0,
+                            "Shared Written Blocks": 0,
+                            "Local Hit Blocks": 0,
+                            "Local Read Blocks": 0,
+                            "Local Dirtied Blocks": 0,
+                            "Local Written Blocks": 0,
+                            "Temp Read Blocks": 0,
+                            "Temp Written Blocks": 0,
+                            "Plans": [
+                              {
+                                "Node Type": "Result",
+                                "Parent Relationship": "SubPlan",
+                                "Subplan Name": "SubPlan 2",
+                                "Parallel Aware": false,
+                                "Async Capable": false,
+                                "Startup Cost": 2.44,
+                                "Total Cost": 3.94,
+                                "Plan Rows": 1,
+                                "Plan Width": 0,
+                                "Actual Startup Time": 0.001,
+                                "Actual Total Time": 0.001,
+                                "Actual Rows": 1,
+                                "Actual Loops": 200,
+                                "One-Time Filter": "(InitPlan 1).col1",
+                                "Shared Hit Blocks": 400,
+                                "Shared Read Blocks": 0,
+                                "Shared Dirtied Blocks": 0,
+                                "Shared Written Blocks": 0,
+                                "Local Hit Blocks": 0,
+                                "Local Read Blocks": 0,
+                                "Local Dirtied Blocks": 0,
+                                "Local Written Blocks": 0,
+                                "Temp Read Blocks": 0,
+                                "Temp Written Blocks": 0,
+                                "Plans": [
+                                  {
+                                    "Node Type": "Seq Scan",
+                                    "Parent Relationship": "InitPlan",
+                                    "Subplan Name": "InitPlan 1",
+                                    "Parallel Aware": false,
+                                    "Async Capable": false,
+                                    "Relation Name": "business_members",
+                                    "Alias": "business_members",
+                                    "Startup Cost": 0.0,
+                                    "Total Cost": 2.44,
+                                    "Plan Rows": 1,
+                                    "Plan Width": 0,
+                                    "Actual Startup Time": 0.0,
+                                    "Actual Total Time": 0.0,
+                                    "Actual Rows": 1,
+                                    "Actual Loops": 200,
+                                    "Filter": "((is_active IS TRUE) AND ((role)::text = ANY ('{master,owner}'::text[])) AND (business_id = booking_requests.business_id) AND (user_id = 'dd672164-6327-4191-bf03-3af6ab0a34a2'::uuid))",
+                                    "Rows Removed by Filter": 0,
+                                    "Shared Hit Blocks": 200,
+                                    "Shared Read Blocks": 0,
+                                    "Shared Dirtied Blocks": 0,
+                                    "Shared Written Blocks": 0,
+                                    "Local Hit Blocks": 0,
+                                    "Local Read Blocks": 0,
+                                    "Local Dirtied Blocks": 0,
+                                    "Local Written Blocks": 0,
+                                    "Temp Read Blocks": 0,
+                                    "Temp Written Blocks": 0
+                                  },
+                                  {
+                                    "Node Type": "Seq Scan",
+                                    "Parent Relationship": "Outer",
+                                    "Parallel Aware": false,
+                                    "Async Capable": false,
+                                    "Relation Name": "masters",
+                                    "Alias": "masters",
+                                    "Startup Cost": 2.44,
+                                    "Total Cost": 3.94,
+                                    "Plan Rows": 1,
+                                    "Plan Width": 0,
+                                    "Actual Startup Time": 0.0,
+                                    "Actual Total Time": 0.0,
+                                    "Actual Rows": 1,
+                                    "Actual Loops": 200,
+                                    "Filter": "((is_active IS TRUE) AND (id = booking_requests.master_id) AND (business_id = booking_requests.business_id) AND (user_id = 'dd672164-6327-4191-bf03-3af6ab0a34a2'::uuid))",
+                                    "Rows Removed by Filter": 0,
+                                    "Shared Hit Blocks": 200,
+                                    "Shared Read Blocks": 0,
+                                    "Shared Dirtied Blocks": 0,
+                                    "Shared Written Blocks": 0,
+                                    "Local Hit Blocks": 0,
+                                    "Local Read Blocks": 0,
+                                    "Local Dirtied Blocks": 0,
+                                    "Local Written Blocks": 0,
+                                    "Temp Read Blocks": 0,
+                                    "Temp Written Blocks": 0
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "Node Type": "Index Scan",
+                    "Parent Relationship": "Inner",
+                    "Parallel Aware": false,
+                    "Async Capable": false,
+                    "Scan Direction": "Forward",
+                    "Index Name": "uq_conversation_messages_conversation_id",
+                    "Relation Name": "conversation_messages",
+                    "Alias": "conversation_messages",
+                    "Startup Cost": 3.18,
+                    "Total Cost": 5.59,
+                    "Plan Rows": 1,
+                    "Plan Width": 20,
+                    "Actual Startup Time": 0.002,
+                    "Actual Total Time": 0.004,
+                    "Actual Rows": 20,
+                    "Actual Loops": 200,
+                    "Index Cond": "((conversation_id = conversations.id) AND (sequence > COALESCE((SubPlan 3), 0)))",
+                    "Rows Removed by Index Recheck": 0,
+                    "Filter": "(sender_user_id <> 'dd672164-6327-4191-bf03-3af6ab0a34a2'::uuid)",
+                    "Rows Removed by Filter": 0,
+                    "Shared Hit Blocks": 657,
+                    "Shared Read Blocks": 0,
+                    "Shared Dirtied Blocks": 0,
+                    "Shared Written Blocks": 0,
+                    "Local Hit Blocks": 0,
+                    "Local Read Blocks": 0,
+                    "Local Dirtied Blocks": 0,
+                    "Local Written Blocks": 0,
+                    "Temp Read Blocks": 0,
+                    "Temp Written Blocks": 0,
+                    "Plans": [
+                      {
+                        "Node Type": "Seq Scan",
+                        "Parent Relationship": "SubPlan",
+                        "Subplan Name": "SubPlan 3",
+                        "Parallel Aware": false,
+                        "Async Capable": false,
+                        "Relation Name": "conversation_read_states",
+                        "Alias": "conversation_read_states",
+                        "Startup Cost": 0.0,
+                        "Total Cost": 2.91,
+                        "Plan Rows": 1,
+                        "Plan Width": 4,
+                        "Actual Startup Time": 0.001,
+                        "Actual Total Time": 0.001,
+                        "Actual Rows": 0,
+                        "Actual Loops": 200,
+                        "Filter": "((conversation_id = conversations.id) AND (user_id = 'dd672164-6327-4191-bf03-3af6ab0a34a2'::uuid))",
+                        "Rows Removed by Filter": 0,
+                        "Shared Hit Blocks": 200,
+                        "Shared Read Blocks": 0,
+                        "Shared Dirtied Blocks": 0,
+                        "Shared Written Blocks": 0,
+                        "Local Hit Blocks": 0,
+                        "Local Read Blocks": 0,
+                        "Local Dirtied Blocks": 0,
+                        "Local Written Blocks": 0,
+                        "Temp Read Blocks": 0,
+                        "Temp Written Blocks": 0
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "Planning": {
+            "Shared Hit Blocks": 24,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0
+          },
+          "Planning Time": 0.658,
+          "Triggers": [],
+          "Execution Time": 2.13
+        }
+      ],
+      "history": [
+        {
+          "Plan": {
+            "Node Type": "Limit",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Startup Cost": 0.27,
+            "Total Cost": 6.04,
+            "Plan Rows": 1,
+            "Plan Width": 1182,
+            "Actual Startup Time": 0.03,
+            "Actual Total Time": 0.033,
+            "Actual Rows": 20,
+            "Actual Loops": 1,
+            "Shared Hit Blocks": 3,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0,
+            "Plans": [
+              {
+                "Node Type": "Index Scan",
+                "Parent Relationship": "Outer",
+                "Parallel Aware": false,
+                "Async Capable": false,
+                "Scan Direction": "Backward",
+                "Index Name": "uq_conversation_messages_conversation_id",
+                "Relation Name": "conversation_messages",
+                "Alias": "conversation_messages",
+                "Startup Cost": 0.27,
+                "Total Cost": 6.04,
+                "Plan Rows": 1,
+                "Plan Width": 1182,
+                "Actual Startup Time": 0.029,
+                "Actual Total Time": 0.031,
+                "Actual Rows": 20,
+                "Actual Loops": 1,
+                "Index Cond": "(conversation_id = '84f2121a-3ac6-45c8-a042-f96d21c8e7dc'::uuid)",
+                "Rows Removed by Index Recheck": 0,
+                "Shared Hit Blocks": 3,
+                "Shared Read Blocks": 0,
+                "Shared Dirtied Blocks": 0,
+                "Shared Written Blocks": 0,
+                "Local Hit Blocks": 0,
+                "Local Read Blocks": 0,
+                "Local Dirtied Blocks": 0,
+                "Local Written Blocks": 0,
+                "Temp Read Blocks": 0,
+                "Temp Written Blocks": 0
+              }
+            ]
+          },
+          "Planning": {
+            "Shared Hit Blocks": 0,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0
+          },
+          "Planning Time": 0.081,
+          "Triggers": [],
+          "Execution Time": 0.06
+        }
+      ],
+      "inbox": [
+        {
+          "Plan": {
+            "Node Type": "Limit",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Startup Cost": 5.92,
+            "Total Cost": 5.97,
+            "Plan Rows": 2,
+            "Plan Width": 162,
+            "Actual Startup Time": 0.099,
+            "Actual Total Time": 0.102,
+            "Actual Rows": 20,
+            "Actual Loops": 1,
+            "Shared Hit Blocks": 5,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0,
+            "Plans": [
+              {
+                "Node Type": "Incremental Sort",
+                "Parent Relationship": "Outer",
+                "Parallel Aware": false,
+                "Async Capable": false,
+                "Startup Cost": 5.92,
+                "Total Cost": 5.97,
+                "Plan Rows": 2,
+                "Plan Width": 162,
+                "Actual Startup Time": 0.098,
+                "Actual Total Time": 0.099,
+                "Actual Rows": 20,
+                "Actual Loops": 1,
+                "Sort Key": [
+                  "created_at DESC",
+                  "id DESC"
+                ],
+                "Presorted Key": [
+                  "created_at"
+                ],
+                "Full-sort Groups": {
+                  "Group Count": 1,
+                  "Sort Methods Used": [
+                    "top-N heapsort"
+                  ],
+                  "Sort Space Memory": {
+                    "Average Sort Space Used": 34,
+                    "Peak Sort Space Used": 34
+                  }
+                },
+                "Pre-sorted Groups": {
+                  "Group Count": 1,
+                  "Sort Methods Used": [
+                    "top-N heapsort"
+                  ],
+                  "Sort Space Memory": {
+                    "Average Sort Space Used": 31,
+                    "Peak Sort Space Used": 31
+                  }
+                },
+                "Shared Hit Blocks": 5,
+                "Shared Read Blocks": 0,
+                "Shared Dirtied Blocks": 0,
+                "Shared Written Blocks": 0,
+                "Local Hit Blocks": 0,
+                "Local Read Blocks": 0,
+                "Local Dirtied Blocks": 0,
+                "Local Written Blocks": 0,
+                "Temp Read Blocks": 0,
+                "Temp Written Blocks": 0,
+                "Plans": [
+                  {
+                    "Node Type": "Index Scan",
+                    "Parent Relationship": "Outer",
+                    "Parallel Aware": false,
+                    "Async Capable": false,
+                    "Scan Direction": "Backward",
+                    "Index Name": "ix_booking_requests_business_status_created",
+                    "Relation Name": "booking_requests",
+                    "Alias": "booking_requests",
+                    "Startup Cost": 0.14,
+                    "Total Cost": 5.91,
+                    "Plan Rows": 1,
+                    "Plan Width": 162,
+                    "Actual Startup Time": 0.021,
+                    "Actual Total Time": 0.033,
+                    "Actual Rows": 100,
+                    "Actual Loops": 1,
+                    "Index Cond": "((business_id = '73f6e3c0-e8b4-4902-93e4-fae4280aa680'::uuid) AND ((status)::text = 'waiting_master'::text))",
+                    "Rows Removed by Index Recheck": 0,
+                    "Shared Hit Blocks": 5,
+                    "Shared Read Blocks": 0,
+                    "Shared Dirtied Blocks": 0,
+                    "Shared Written Blocks": 0,
+                    "Local Hit Blocks": 0,
+                    "Local Read Blocks": 0,
+                    "Local Dirtied Blocks": 0,
+                    "Local Written Blocks": 0,
+                    "Temp Read Blocks": 0,
+                    "Temp Written Blocks": 0
+                  }
+                ]
+              }
+            ]
+          },
+          "Planning": {
+            "Shared Hit Blocks": 0,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0
+          },
+          "Planning Time": 0.097,
+          "Triggers": [],
+          "Execution Time": 0.159
+        }
+      ]
+    }
+  },
+  "operations": {
+    "image": "ghcr.io/polen452294/booking-bot:1.0.0-rc.1",
+    "disaster_recovery": "passed",
+    "host_reboot": "not executed",
+    "service_restarts": "passed",
+    "worker_kill": "passed",
+    "outages_alerts": "passed (capturing sender; no live Telegram)",
+    "redis_loss": "passed: PostgreSQL intact, temporary key lost, heartbeat regenerated",
+    "backup_failure": "passed: injected write denial, durable failure latch and recovery",
+    "disk_full": "passed with mock thresholds; disk not filled",
+    "negative_isolation": "passed: A API/worker cannot connect to B DB IP; own DNS resolves only own DB",
+    "performance": {
+      "concurrency": 32,
+      "requests": 96,
+      "all_status": 200,
+      "seconds": 1.056,
+      "p95_seconds": 0.846,
+      "max_seconds": 1.023
+    },
+    "test_environment": {
+      "NCPU": 20,
+      "MemTotal": 8169623552,
+      "OperatingSystem": "Docker Desktop",
+      "Architecture": "x86_64"
+    },
+    "resources": [
+      {
+        "slug": "dr-test",
+        "stats": [
+          {
+            "BlockIO": "451kB / 172kB",
+            "CPUPerc": "0.17%",
+            "Container": "3ef4a0b5372aa8cba6ccf1759d06dc1b21cc4c552dfb911581a6f882dee65ad8",
+            "ID": "3ef4a0b5372a",
+            "MemPerc": "2.80%",
+            "MemUsage": "218MiB / 7.609GiB",
+            "Name": "booking-dr-test-a4b284aa-api-1",
+            "NetIO": "224kB / 206kB",
+            "PIDs": "6"
+          },
+          {
+            "BlockIO": "5.22MB / 1.4MB",
+            "CPUPerc": "4.50%",
+            "Container": "793db9c33f383791ac1e022ee63ec4bfdff75825c18146d0722efe5ee7c1d7de",
+            "ID": "793db9c33f38",
+            "MemPerc": "0.44%",
+            "MemUsage": "34.24MiB / 7.609GiB",
+            "Name": "booking-dr-test-a4b284aa-postgres-1",
+            "NetIO": "633kB / 569kB",
+            "PIDs": "10"
+          },
+          {
+            "BlockIO": "1.7MB / 1.53MB",
+            "CPUPerc": "0.45%",
+            "Container": "7aebc9f94bcdbe1e17a5a29e60fc294e20827e05ddf41934db30d2e84dc6e0f3",
+            "ID": "7aebc9f94bcd",
+            "MemPerc": "0.05%",
+            "MemUsage": "3.98MiB / 7.609GiB",
+            "Name": "booking-dr-test-a4b284aa-redis-1",
+            "NetIO": "219kB / 81.9kB",
+            "PIDs": "7"
+          },
+          {
+            "BlockIO": "545kB / 1.65MB",
+            "CPUPerc": "99.00%",
+            "Container": "a7fee47f87e705af550f51eb88f67e54b5a6610e6c12ea910e85f6c478c551f8",
+            "ID": "a7fee47f87e7",
+            "MemPerc": "4.19%",
+            "MemUsage": "326.6MiB / 7.609GiB",
+            "Name": "booking-dr-test-a4b284aa-worker-1",
+            "NetIO": "255kB / 387kB",
+            "PIDs": "3"
+          }
+        ]
+      },
+      {
+        "slug": "dr-test-b",
+        "stats": [
+          {
+            "BlockIO": "1.32MB / 9.71MB",
+            "CPUPerc": "0.13%",
+            "Container": "8314ddb74e06a7a7907d45d2e3cc6fdc3258dcb28f2d8a6682ca06a3154da713",
+            "ID": "8314ddb74e06",
+            "MemPerc": "2.36%",
+            "MemUsage": "183.7MiB / 7.609GiB",
+            "Name": "booking-dr-test-b-42285edc-api-1",
+            "NetIO": "220kB / 206kB",
+            "PIDs": "6"
+          },
+          {
+            "BlockIO": "1.78MB / 92.7MB",
+            "CPUPerc": "3.97%",
+            "Container": "a36ed6818891ab2058ee20403bba320d9104e8d543c39a09ea56301dd20d37b4",
+            "ID": "a36ed6818891",
+            "MemPerc": "0.57%",
+            "MemUsage": "44.5MiB / 7.609GiB",
+            "Name": "booking-dr-test-b-42285edc-postgres-1",
+            "NetIO": "862kB / 719kB",
+            "PIDs": "8"
+          },
+          {
+            "BlockIO": "4.08MB / 4.21MB",
+            "CPUPerc": "3.40%",
+            "Container": "161642332df25bbe9b2fe6b9b922fd2365606b7834f09922c625abe8d65903f6",
+            "ID": "161642332df2",
+            "MemPerc": "0.05%",
+            "MemUsage": "3.91MiB / 7.609GiB",
+            "Name": "booking-dr-test-b-42285edc-redis-1",
+            "NetIO": "436kB / 154kB",
+            "PIDs": "7"
+          },
+          {
+            "BlockIO": "1.72MB / 46.4MB",
+            "CPUPerc": "99.31%",
+            "Container": "bafed3abd5147857fb122ceb5c92e5283dd7b237011bb317e5047546c3a6e245",
+            "ID": "bafed3abd514",
+            "MemPerc": "2.19%",
+            "MemUsage": "170.8MiB / 7.609GiB",
+            "Name": "booking-dr-test-b-42285edc-worker-1",
+            "NetIO": "625kB / 1.02MB",
+            "PIDs": "3"
+          }
+        ]
+      }
+    ],
+    "cross_client_isolation": "passed: data/peer container IDs throughout outages and DR",
+    "production_check": "intentionally blocked: no public domain/TLS/live Telegram",
+    "alert_messages_captured": 10
+  },
+  "redis_runtime": {
+    "uid": 999,
+    "effective_capabilities": 0,
+    "restart_recreate_persistence": "passed",
+    "backup_restore": "passed",
+    "two_client_isolation": "passed",
+    "real_telegram": "not tested"
+  },
+  "checks": {
+    "ruff": "passed",
+    "windows_unit": 396,
+    "linux_unit": 396,
+    "integration": 124,
+    "fresh_old_db_images": "passed",
+    "actual_broken_image_recovery": "passed",
+    "proxy_operations": "passed",
+    "full_vps": "not tested",
+    "real_telegram_tls": "not tested",
+    "github_ci_current_snapshot": "not run"
+  },
+  "outage_log_audit": [
+    {
+      "slug": "dr-test",
+      "service": "api",
+      "stream_bytes": 22304,
+      "raw_secret_matches": 0,
+      "private_sample_matches": 0,
+      "tracebacks": 0
+    },
+    {
+      "slug": "dr-test",
+      "service": "postgres",
+      "stream_bytes": 8709,
+      "raw_secret_matches": 0,
+      "private_sample_matches": 0,
+      "tracebacks": 0
+    },
+    {
+      "slug": "dr-test",
+      "service": "redis",
+      "stream_bytes": 6427,
+      "raw_secret_matches": 0,
+      "private_sample_matches": 0,
+      "tracebacks": 0
+    },
+    {
+      "slug": "dr-test",
+      "service": "worker",
+      "stream_bytes": 13399,
+      "raw_secret_matches": 0,
+      "private_sample_matches": 0,
+      "tracebacks": 0
+    },
+    {
+      "slug": "dr-test-b",
+      "service": "api",
+      "stream_bytes": 2127,
+      "raw_secret_matches": 0,
+      "private_sample_matches": 0,
+      "tracebacks": 0
+    },
+    {
+      "slug": "dr-test-b",
+      "service": "postgres",
+      "stream_bytes": 4707,
+      "raw_secret_matches": 0,
+      "private_sample_matches": 0,
+      "tracebacks": 0
+    },
+    {
+      "slug": "dr-test-b",
+      "service": "redis",
+      "stream_bytes": 3931,
+      "raw_secret_matches": 0,
+      "private_sample_matches": 0,
+      "tracebacks": 0
+    },
+    {
+      "slug": "dr-test-b",
+      "service": "worker",
+      "stream_bytes": 546,
+      "raw_secret_matches": 0,
+      "private_sample_matches": 0,
+      "tracebacks": 0
+    },
+    {
+      "slug": "release-a",
+      "service": "api",
+      "stream_bytes": 2127,
+      "raw_secret_matches": 0,
+      "private_sample_matches": 0,
+      "tracebacks": 0
+    },
+    {
+      "slug": "release-a",
+      "service": "postgres",
+      "stream_bytes": 5890,
+      "raw_secret_matches": 0,
+      "private_sample_matches": 0,
+      "tracebacks": 0
+    },
+    {
+      "slug": "release-a",
+      "service": "redis",
+      "stream_bytes": 1912,
+      "raw_secret_matches": 0,
+      "private_sample_matches": 0,
+      "tracebacks": 0
+    },
+    {
+      "slug": "release-a",
+      "service": "worker",
+      "stream_bytes": 546,
+      "raw_secret_matches": 0,
+      "private_sample_matches": 0,
+      "tracebacks": 0
+    },
+    {
+      "slug": "release-b",
+      "service": "api",
+      "stream_bytes": 2127,
+      "raw_secret_matches": 0,
+      "private_sample_matches": 0,
+      "tracebacks": 0
+    },
+    {
+      "slug": "release-b",
+      "service": "postgres",
+      "stream_bytes": 4698,
+      "raw_secret_matches": 0,
+      "private_sample_matches": 0,
+      "tracebacks": 0
+    },
+    {
+      "slug": "release-b",
+      "service": "redis",
+      "stream_bytes": 2824,
+      "raw_secret_matches": 0,
+      "private_sample_matches": 0,
+      "tracebacks": 0
+    },
+    {
+      "slug": "release-b",
+      "service": "worker",
+      "stream_bytes": 546,
+      "raw_secret_matches": 0,
+      "private_sample_matches": 0,
+      "tracebacks": 0
+    }
+  ],
+  "workspace_disk": {
+    "total_bytes": 993248931840,
+    "used_bytes": 878726971392,
+    "free_bytes": 114521960448
+  },
+  "final_windows_checks": {
+    "completed_at_utc": "2026-10-03T07:30:56.638800+00:00",
+    "ruff": "passed",
+    "suites": [
+      {
+        "command": "pytest -q",
+        "exit_code": 0,
+        "passed": 396,
+        "artifact": "tmp/phase8-final-unit-confirmed.log"
+      },
+      {
+        "command": "pytest -q -m integration",
+        "exit_code": 0,
+        "passed": 124,
+        "artifact": "tmp/phase8-final-integration-confirmed.log"
+      }
+    ]
+  },
+  "lab_cleanup": {
+    "phase8_deployments_stopped": 8,
+    "volumes_backups_preserved": true,
+    "preexisting_services_preserved": true
+  }
+}

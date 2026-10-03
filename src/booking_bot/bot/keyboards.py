@@ -11,6 +11,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from booking_bot.db.models import Service
 from booking_bot.domain.enums import AppointmentStatus
+from booking_bot.domain.money import format_money
 from booking_bot.services.availability import BookableSlot
 from booking_bot.services.bookings import AppointmentSummary
 from booking_bot.services.master_schedule import (
@@ -24,7 +25,9 @@ from booking_bot.specialist_config import get_specialist_template
 WEEKDAYS_RU = ("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс")
 
 
-def main_menu_keyboard(*, master_access: bool = False) -> InlineKeyboardMarkup:
+def main_menu_keyboard(
+    *, master_access: bool = False, unread_count: int = 0
+) -> InlineKeyboardMarkup:
     template = get_specialist_template()
     rows = [
         [
@@ -40,6 +43,14 @@ def main_menu_keyboard(*, master_access: bool = False) -> InlineKeyboardMarkup:
             )
         ],
     ]
+    rows.append(
+        [
+            InlineKeyboardButton(
+                text="Мои заявки" + (f" 🔴 {unread_count}" if unread_count else ""),
+                callback_data="rq:mine",
+            )
+        ]
+    )
     if master_access:
         rows.append(
             [
@@ -64,10 +75,13 @@ def services_keyboard(services: list[Service]) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     for service in services:
         price = (
-            f" - {service.price_minor / 100:.0f} {service.currency}"
+            f" - {'от ' if service.pricing_mode == 'from' else ''}"
+            f"{format_money(service.price_minor, service.currency)}"
             if service.price_minor is not None
             else ""
         )
+        if service.pricing_mode == "negotiable":
+            price = " — стоимость после обсуждения"
         builder.button(text=f"{service.name}{price}", callback_data=f"service:{service.id}")
     builder.button(
         text=get_specialist_template().button("home", "В главное меню"),
@@ -198,6 +212,15 @@ def client_appointment_actions_keyboard(
     appointment: AppointmentSummary,
 ) -> InlineKeyboardMarkup:
     rows: list[list[InlineKeyboardButton]] = []
+    if appointment.booking_request_id:
+        rows.append(
+            [
+                InlineKeyboardButton(
+                    text="Обсуждение с мастером",
+                    callback_data=f"rq:appointment:{appointment.appointment_id.hex}",
+                )
+            ]
+        )
     if appointment.can_change:
         rows.extend(
             [
@@ -257,6 +280,12 @@ def client_appointment_actions_keyboard(
             ],
         ]
     )
+    if appointment.booking_request_id:
+        rows = [
+            row
+            for row in rows
+            if not any(button.callback_data.startswith("appt:contact:") for button in row)
+        ]
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
@@ -318,9 +347,15 @@ def phone_keyboard() -> ReplyKeyboardMarkup:
     )
 
 
-def master_menu_keyboard() -> InlineKeyboardMarkup:
+def master_menu_keyboard(*, unread_count: int = 0) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="Заявки и диалоги" + (f" 🔴 {unread_count}" if unread_count else ""),
+                    callback_data="rq:inbox",
+                )
+            ],
             [
                 InlineKeyboardButton(
                     text="Сегодня",
@@ -480,9 +515,7 @@ def master_manual_confirmation_keyboard() -> InlineKeyboardMarkup:
 def _service_price_label(service: Service) -> str:
     if service.price_minor is None:
         return "цена не указана"
-    symbols = {"RUB": "₽", "USD": "$", "EUR": "€"}
-    amount = f"{service.price_minor / 100:,.0f}".replace(",", " ")
-    return f"{amount} {symbols.get(service.currency, service.currency)}"
+    return format_money(service.price_minor, service.currency)
 
 
 def master_services_keyboard(services: list[Service]) -> InlineKeyboardMarkup:
@@ -634,6 +667,15 @@ def master_appointment_actions_keyboard(
     appointment: MasterAppointment,
 ) -> InlineKeyboardMarkup:
     rows: list[list[InlineKeyboardButton]] = []
+    if appointment.booking_request_id:
+        rows.append(
+            [
+                InlineKeyboardButton(
+                    text="Диалог с клиентом",
+                    callback_data=f"rq:appointment:{appointment.appointment_id.hex}",
+                )
+            ]
+        )
     if appointment.status == AppointmentStatus.PENDING_APPROVAL.value:
         rows.append(
             [

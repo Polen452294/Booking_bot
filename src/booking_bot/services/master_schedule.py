@@ -58,6 +58,7 @@ class MasterAppointment:
     local_end: datetime
     duration_minutes: int
     status: str
+    booking_request_id: UUID | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -930,6 +931,7 @@ class MasterScheduleService:
     ) -> MasterAppointment:
         return MasterAppointment(
             appointment_id=appointment.id,
+            booking_request_id=appointment.booking_request_id,
             service_name=appointment.service_name_snapshot,
             client_name=appointment.client_name_snapshot,
             client_phone=appointment.client_phone_snapshot,

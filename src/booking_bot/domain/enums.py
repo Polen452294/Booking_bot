@@ -49,3 +49,45 @@ class NotificationJobState(StrEnum):
     SENT = "sent"
     FAILED = "failed"
     CANCELLED = "cancelled"
+
+
+class PricingMode(StrEnum):
+    FIXED = "fixed"
+    FROM = "from"
+    NEGOTIABLE = "negotiable"
+
+
+class BookingRequestStatus(StrEnum):
+    DRAFT = "draft"
+    WAITING_MASTER = "waiting_master"
+    WAITING_CLIENT = "waiting_client"
+    TERMS_PROPOSED = "terms_proposed"
+    TERMS_ACCEPTED = "terms_accepted"
+    BOOKED = "booked"
+    CANCELLED = "cancelled"
+    CLOSED = "closed"
+
+
+class ConversationStatus(StrEnum):
+    OPEN = "open"
+    CLOSED = "closed"
+
+
+class ConversationSenderRole(StrEnum):
+    CLIENT = "client"
+    MASTER = "master"
+    SYSTEM = "system"
+
+
+class ConversationMessageType(StrEnum):
+    TEXT = "text"
+    PHOTO = "photo"
+    DOCUMENT = "document"
+    SYSTEM = "system"
+
+
+class PriceProposalStatus(StrEnum):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
+    SUPERSEDED = "superseded"

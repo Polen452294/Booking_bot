@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "telegram-specialist-booking-bot"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Reusable single-specialist Telegram booking bot"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -21,6 +21,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+backup-s3 = ["boto3>=1.35,<2"]
 dev = [
   "httpx>=0.28,<1",
   "pytest>=8.4,<9",
@@ -30,9 +31,13 @@ dev = [
 
 [project.scripts]
 booking-admin = "booking_bot.cli:main"
+bookingctl = "booking_bot.deployment.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/booking_bot"]
+
+[tool.hatch.version]
+path = "src/booking_bot/version.py"
 
 [tool.pytest.ini_options]
 addopts = "-q -m 'not integration'"
@@ -40,7 +45,7 @@ asyncio_mode = "auto"
 asyncio_default_test_loop_scope = "session"
 testpaths = ["tests"]
 markers = [
-  "integration: requires the local PostgreSQL test service",
+  "integration: requires isolated PostgreSQL and Redis test services",
 ]
 
 

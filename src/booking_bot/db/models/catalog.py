@@ -4,6 +4,7 @@ from sqlalchemy import Boolean, CheckConstraint, ForeignKey, Integer, String, Te
 from sqlalchemy.orm import Mapped, mapped_column
 
 from booking_bot.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
+from booking_bot.domain.enums import PricingMode
 
 
 class Location(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -26,6 +27,7 @@ class Service(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         CheckConstraint("buffer_before_minutes >= 0", name="buffer_before_nonnegative"),
         CheckConstraint("buffer_after_minutes >= 0", name="buffer_after_nonnegative"),
         CheckConstraint("price_minor IS NULL OR price_minor >= 0", name="price_nonnegative"),
+        CheckConstraint("pricing_mode IN ('fixed', 'from', 'negotiable')", name="pricing_mode"),
     )
 
     business_id: Mapped[UUID] = mapped_column(
@@ -38,6 +40,9 @@ class Service(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     buffer_before_minutes: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     buffer_after_minutes: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     price_minor: Mapped[int | None] = mapped_column(Integer)
+    pricing_mode: Mapped[str] = mapped_column(
+        String(24), nullable=False, default=PricingMode.FIXED.value, server_default="fixed"
+    )
     currency: Mapped[str] = mapped_column(String(3), nullable=False, default="RUB")
     requires_approval: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     requires_deposit: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)

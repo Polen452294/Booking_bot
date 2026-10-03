@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from booking_bot.db.models import Business, MasterService, Service
+from booking_bot.domain.enums import PricingMode
 
 MIN_DURATION_MINUTES = 5
 MAX_DURATION_MINUTES = 24 * 60
@@ -28,6 +29,22 @@ class InvalidServiceValueError(ServiceCatalogError):
 
 
 class SpecialistServiceCatalog:
+    async def set_pricing_mode(
+        self, session: AsyncSession, *, business_id: UUID, master_id: UUID,
+        service_id: UUID, pricing_mode: PricingMode,
+    ) -> Service:
+        try:
+            mode = PricingMode(pricing_mode)
+        except ValueError as exc:
+            raise InvalidServiceValueError("Invalid pricing mode") from exc
+        service = await self.get_service(
+            session, business_id=business_id, master_id=master_id, service_id=service_id,
+        )
+        service.pricing_mode = mode.value
+        service.is_owner_managed = True
+        await session.flush()
+        return service
+
     async def list_services(
         self,
         session: AsyncSession,

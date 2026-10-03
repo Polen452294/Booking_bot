@@ -11,6 +11,8 @@ import subprocess
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+from booking_bot.version import POSTGRES_IMAGE_REPOSITORY, __version__
+
 from booking_bot.deployment.files import (
     DeploymentError,
     atomic_write,
@@ -264,7 +266,8 @@ class BackupManager:
 
     def _verify_path(self, slug: str, path: Path) -> dict:
         manifest = verify_files(path, slug)
-        # The tooling version is fixed, never taken as an executable/image from untrusted metadata.
+        # Use this CLI release's hardened PostgreSQL tooling, never an image from
+        # untrusted backup metadata or a mutable upstream tag.
         if int(manifest["postgres_version_num"]) // 10000 != 17:
             raise DeploymentError("Only PostgreSQL 17 backups are supported")
         run_docker(
@@ -283,7 +286,7 @@ class BackupManager:
                 *(["--user", f"{os.getuid()}:{os.getgid()}"] if os.name != "nt" else []),
                 "--mount",
                 f"type=bind,src={path},dst=/backup,readonly",
-                "postgres:17-alpine",
+                f"{POSTGRES_IMAGE_REPOSITORY}:{__version__}",
                 "pg_restore",
                 "--list",
                 "/backup/database.dump",

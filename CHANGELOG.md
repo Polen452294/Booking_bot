@@ -23,6 +23,8 @@ not a published version. The application remains 1.0.0-rc.1.
 - Release provenance rejects wrong OCI metadata and substituted registry artifacts.
 - Offline backup verification runs with the Linux operator UID/GID, preserving
   private archive permissions and capability restrictions for non-root operators.
+- Backup validation uses the release's scanned hardened PostgreSQL tooling
+  instead of the mutable upstream image containing the previously identified gosu findings.
 
 ### Migration notes
 - Single Alembic head c75a01d29f10; schema unchanged from 1.0.0-rc.1.

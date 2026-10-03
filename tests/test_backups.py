@@ -13,6 +13,7 @@ from booking_bot.deployment.cli import build_parser, run_backup
 from booking_bot.deployment.files import DeploymentError, atomic_write, read_json
 from booking_bot.deployment.manager import DeploymentManager
 from booking_bot.deployment.templates import compose_model
+from booking_bot.version import POSTGRES_IMAGE_REPOSITORY, __version__
 from test_bookingctl import manager, request  # noqa: F401
 
 
@@ -86,6 +87,8 @@ def test_private_archive_reader_preserves_security_and_host_access(backups, monk
     assert "--read-only" in command
     assert "no-new-privileges:true" in command
     assert "readonly" in command[command.index("--mount") + 1]
+    assert f"{POSTGRES_IMAGE_REPOSITORY}:{__version__}" in command
+    assert "postgres:17-alpine" not in command
     if platform == "posix":
         assert command[command.index("--user") + 1] == "1001:1002"
     else:

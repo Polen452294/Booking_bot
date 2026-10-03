@@ -48,6 +48,9 @@ Systemd service по умолчанию запускается root: устан�
 Offline `pg_restore --list` validator на Linux запускается с UID/GID этого
 оператора, без capabilities/network и с read-only backup mount. Это позволяет
 проверять private archive без ослабления 0700/0600 permissions.
+Validator использует hardened `booking-postgres` package той же версии,
+что установленный host CLI. Этот image должен быть доступен в GHCR/локальном
+Docker cache; произвольные images из backup metadata не исполняются.
 
 ## Ручной backup, проверка и статус
 

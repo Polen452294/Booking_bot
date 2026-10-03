@@ -11,8 +11,6 @@ import subprocess
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-from booking_bot.version import POSTGRES_IMAGE_REPOSITORY, __version__
-
 from booking_bot.deployment.files import (
     DeploymentError,
     atomic_write,
@@ -33,6 +31,7 @@ from booking_bot.deployment.manager import (
 )
 from booking_bot.deployment.templates import compose_model, legacy_compose_model
 from booking_bot.specialist_config import SpecialistConfigError, load_specialist_template
+from booking_bot.version import POSTGRES_IMAGE_REPOSITORY, __version__
 
 FILES = ("database.dump", "specialist.toml", "metadata.json", "manifest.json")
 ALL_FILES = (*FILES, "SHA256SUMS")
